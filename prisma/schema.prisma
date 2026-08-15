@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider  = "postgresql"
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model SiteSettings {
+  id            String  @id @default("singleton")
+
+  // Template
+  themePreset   String  @default("saffron")   // saffron | royal | emerald
+  primaryColor  String  @default("#C2410C")
+  accentColor   String  @default("#F5E6D3")
+
+  // Your Details
+  businessName  String  @default("Lunawat Astro Point")
+  personName    String  @default("Dr Rahul Jain")
+  credentials   String?                        // B.A.M.S., PGDip..., MBA
+  tagline       String?
+  heroHeadline  String?
+  heroSubtext   String?
+  heroImageUrl  String?
+  logoUrl       String?
+  languages     String[] @default([])          // hindi, english, marathi
+  experience    Int?     @default(23)
+
+  // Contact
+  phone         String?
+  whatsapp      String?
+  email         String?
+  upiNumber     String?
+  address       String?
+  mapEmbedUrl   String?
+  instagramUrl  String?
+  youtubeUrl    String?
+  facebookUrl   String?
+  otherUrl      String?
+
+  // About / Trust
+  aboutTitle    String?
+  aboutBody     String?  @db.Text
+  aboutImageUrl String?
+  ctaTitle      String?
+  ctaSubtext    String?
+
+  // Section visibility (mirrors admin toggle grid)
+  showStats         Boolean @default(true)
+  showAbout         Boolean @default(true)
+  showWhyChoose     Boolean @default(true)
+  showServices      Boolean @default(true)
+  showCertifications Boolean @default(true)
+  showTestimonials  Boolean @default(true)
+  showGallery       Boolean @default(true)
+  showVideos        Boolean @default(true)
+  showFaq           Boolean @default(true)
+  showCta           Boolean @default(true)
+  showContact       Boolean @default(true)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  ogImageUrl      String?
+
+  // Payments
+  enablePaymentGateway Boolean @default(false)
+
+  isPublished   Boolean  @default(false)
+  updatedAt     DateTime @updatedAt
+}
+
+model Service {          // Consultations
+  id           String  @id @default(cuid())
+  title        String
+  mode         String  @default("VIDEO_CALL")  // VIDEO_CALL | PHONE | IN_PERSON | VIP
+  price        Int
+  originalPrice Int?
+  durationMin  Int?
+  description  String? @db.Text
+  isPopular    Boolean @default(false)
+  order        Int     @default(0)
+  isActive     Boolean @default(true)
+}
+
+model Stat {
+  id     String @id @default(cuid())
+  label  String            // "Happy Clients"
+  value  String            // "1,000+"
+  icon   String?           // lucide icon name
+  order  Int    @default(0)
+}
+
+model WhyChooseItem {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  icon        String?
+  order       Int    @default(0)
+}
+
+model Certification {
+  id       String  @id @default(cuid())
+  title    String
+  issuer   String?
+  year     String?
+  imageUrl String?
+  order    Int     @default(0)
+}
+
+model Testimonial {
+  id        String  @id @default(cuid())
+  name      String
+  location  String?
+  rating    Int     @default(5)
+  message   String  @db.Text
+  imageUrl  String?
+  order     Int     @default(0)
+  isActive  Boolean @default(true)
+}
+
+model GalleryItem {
+  id         String  @id @default(cuid())
+  imageUrl   String
+  publicId   String                    // Cloudinary public_id for deletion
+  caption    String?
+  category   String? @default("general")
+  width      Int?
+  height     Int?
+  order      Int     @default(0)
+  isActive   Boolean @default(true)
+}
+
+model Video {
+  id        String  @id @default(cuid())
+  youtubeUrl String
+  videoId    String                    // parsed on save
+  title      String?
+  description String?
+  order     Int     @default(0)
+  isActive  Boolean @default(true)
+}
+
+model Faq {
+  id       String  @id @default(cuid())
+  question String
+  answer   String  @db.Text
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+}
+
+model BusinessHour {
+  id       String  @id @default(cuid())
+  day      Int     @unique            // 0=Sun … 6=Sat
+  openTime String  @default("10:00")
+  closeTime String @default("19:00")
+  isClosed Boolean @default(false)
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  serviceId String?
+  message   String?  @db.Text
+  source    String   @default("contact_form")  // contact_form | booking
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Astrology booking details
+  dob       String?  // Date of Birth
+  tob       String?  // Time of Birth
+  pob       String?  // Place of Birth
+
+  // Payment (booking source only)
+  amount             Int?     // in rupees, snapshot of Service.price at booking time
+  paymentStatus      String?  // PENDING | PAID
+  razorpayOrderId    String?
+  razorpayPaymentId  String?
+}
