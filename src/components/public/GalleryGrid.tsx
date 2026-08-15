@@ -20,7 +20,7 @@ export function GalleryGrid({ gallery }: { gallery: GalleryItem[] }) {
           <FadeIn key={img.id} delay={i * 0.1}>
             <button 
               onClick={() => setSelectedImage(img.imageUrl)}
-              className="block aspect-square w-full rounded-3xl overflow-hidden shadow-lg shadow-orange-900/5 bg-brand-cream relative group cursor-pointer border-none p-0 focus:outline-none focus:ring-4 focus:ring-brand-orange/50"
+              className="block aspect-square w-full rounded-3xl overflow-hidden shadow-lg shadow-brand-brown/10 bg-brand-cream relative group cursor-pointer border-none p-0 focus:outline-none focus:ring-4 focus:ring-brand-orange/50"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.imageUrl} alt={img.caption || "Gallery Image"} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />

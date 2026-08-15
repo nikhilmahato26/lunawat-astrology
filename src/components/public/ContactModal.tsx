@@ -40,12 +40,12 @@ export function ContactModal({ isOpen, onClose }: { isOpen: boolean, onClose: ()
       <div className="relative bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-display font-bold text-2xl text-black">Get in Touch</h3>
-            <button 
+            <h3 className="font-serif font-bold text-2xl text-brand-brown">Get in Touch</h3>
+            <button
               onClick={onClose}
-              className="p-2 bg-zinc-100 hover:bg-zinc-200 rounded-full transition-colors"
+              className="p-2 bg-brand-orange/10 hover:bg-brand-orange/20 rounded-full transition-colors"
             >
-              <X size={20} className="text-zinc-500" />
+              <X size={20} className="text-brand-brown/60" />
             </button>
           </div>
 
@@ -56,8 +56,8 @@ export function ContactModal({ isOpen, onClose }: { isOpen: boolean, onClose: ()
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h4 className="text-xl font-bold">Message Sent!</h4>
-              <p className="text-zinc-500">We'll get back to you shortly.</p>
+              <h4 className="font-serif text-xl font-bold text-brand-brown">Message Sent!</h4>
+              <p className="text-brand-brown/60">We'll get back to you shortly.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -66,50 +66,50 @@ export function ContactModal({ isOpen, onClose }: { isOpen: boolean, onClose: ()
                   {errorMessage}
                 </div>
               )}
-              
+
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Your Name *</label>
-                <input 
-                  type="text" 
-                  name="name" 
-                  required 
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" 
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Email Address *</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  required 
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" 
+                <label className="block text-sm font-medium text-brand-brown/80 mb-1">Your Name *</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  className="w-full px-4 py-3 bg-brand-peach/60 border border-brand-orange/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Phone Number (Optional)</label>
-                <input 
-                  type="tel" 
-                  name="phone" 
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all" 
+                <label className="block text-sm font-medium text-brand-brown/80 mb-1">Email Address *</label>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  className="w-full px-4 py-3 bg-brand-peach/60 border border-brand-orange/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
                 />
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">How can we help you? *</label>
-                <textarea 
-                  name="message" 
-                  required 
+                <label className="block text-sm font-medium text-brand-brown/80 mb-1">Phone Number (Optional)</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  className="w-full px-4 py-3 bg-brand-peach/60 border border-brand-orange/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-brand-brown/80 mb-1">How can we help you? *</label>
+                <textarea
+                  name="message"
+                  required
                   rows={4}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all resize-none" 
+                  className="w-full px-4 py-3 bg-brand-peach/60 border border-brand-orange/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all resize-none"
                 ></textarea>
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isPending}
-                className="w-full h-14 bg-black text-white font-medium rounded-xl hover:bg-gold-500 transition-colors disabled:opacity-50 mt-4"
+                className="w-full h-14 bg-brand-orange text-white font-medium rounded-xl hover:bg-gold-600 transition-colors disabled:opacity-50 mt-4"
               >
                 {isPending ? "Sending..." : "Send Message"}
               </button>

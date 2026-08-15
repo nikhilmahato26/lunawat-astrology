@@ -21,7 +21,7 @@ export default async function PublicLayout({ children }: { children: ReactNode }
   const hours = await getHours()
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-gold-500 selection:text-white">
+    <div className="min-h-screen bg-brand-peach text-brand-brown font-sans selection:bg-brand-orange selection:text-white">
       <Navbar 
         businessName={settings?.businessName} 
         phone={settings?.phone || undefined} 

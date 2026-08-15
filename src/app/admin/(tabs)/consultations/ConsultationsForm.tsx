@@ -151,6 +151,52 @@ export function ConsultationsForm({
           checked={service.isPopular}
           onChange={(checked) => updateItem(index, { ...service, isPopular: checked })}
         />
+
+        {/* ── Offer ── */}
+        <div className="space-y-1 border border-zinc-200 rounded-lg p-4 bg-zinc-50">
+          <label className="block text-sm font-medium text-zinc-900 mb-2">
+            Offer
+            <span className="ml-2 text-xs text-zinc-400 font-normal">
+              (shows in the Offers section, stays here too)
+            </span>
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <select
+              value={service.offerType ?? ""}
+              onChange={(e) => {
+                const value = e.target.value || null
+                updateItem(index, {
+                  ...service,
+                  offerType: value,
+                  offerValue: value ? (service.offerValue ?? 10) : null,
+                })
+              }}
+              className={selectClass}
+            >
+              <option value="">No offer</option>
+              <option value="FLAT">Flat amount off (₹)</option>
+              <option value="PERCENT">Percent off (%)</option>
+            </select>
+            {service.offerType && (
+              <TextField
+                label=""
+                type="number"
+                min={0}
+                max={service.offerType === "PERCENT" ? 100 : undefined}
+                value={service.offerValue ?? ""}
+                onChange={(e) => updateItem(index, { ...service, offerValue: e.target.value ? Number(e.target.value) : null })}
+              />
+            )}
+          </div>
+          {service.offerType && service.offerValue ? (
+            <p className="text-xs text-zinc-500 mt-1">
+              Discounted price: ₹
+              {service.offerType === "FLAT"
+                ? Math.max(0, service.price - service.offerValue)
+                : Math.round(service.price * (1 - Math.min(100, service.offerValue) / 100))}
+            </p>
+          ) : null}
+        </div>
       </div>
     )
   }
@@ -174,7 +220,28 @@ export function ConsultationsForm({
           />
         </div>
 
-
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-zinc-900">
+            Booking Form Fields
+            <span className="ml-2 text-xs text-zinc-400 font-normal">
+              (applies to all services)
+            </span>
+          </label>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-3">
+            {BOOKING_FIELD_OPTIONS.map(({ key, label }) => (
+              <label key={key} className="flex items-center gap-2 py-1 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={bookingFields.includes(key)}
+                  onChange={(e) => toggleBookingField(key, e.target.checked)}
+                  className="h-4 w-4 rounded border-zinc-300 accent-black"
+                />
+                <span className="text-sm text-zinc-700">{label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-zinc-400">Unchecked fields are hidden from the booking form.</p>
+        </div>
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-zinc-900">
@@ -256,6 +323,8 @@ export function ConsultationsForm({
               order: 0,
               createdAt: new Date(),
               updatedAt: new Date(),
+              offerType: null,
+              offerValue: null,
             } as Service)
           }
         />

@@ -113,7 +113,7 @@ export function BookingForm({ service, bookingFields, categories = [] }: Booking
   }
 
   const inputClass =
-    "w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
+    "w-full px-4 py-3 bg-brand-peach/60 border border-brand-orange/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -193,7 +193,7 @@ export function BookingForm({ service, bookingFields, categories = [] }: Booking
       <button
         type="submit"
         disabled={isPending}
-        className="w-full h-14 bg-brand-orange text-white font-bold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-50 mt-2"
+        className="w-full h-14 bg-brand-orange text-white font-bold rounded-xl hover:bg-gold-600 transition-colors disabled:opacity-50 mt-2"
       >
         {isPending ? "Processing..." : `Book Now · ₹${service.price}`}
       </button>

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getRazorpay } from "@/lib/razorpay"
+import { getOfferPrice } from "@/lib/pricing"
 import { z } from "zod"
 import crypto from "crypto"
 
@@ -55,6 +56,9 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
     return { success: false, error: "This service is no longer available." }
   }
 
+  // Never trust a client-supplied price — always recompute the offer discount server-side.
+  const effectivePrice = getOfferPrice(service) ?? service.price
+
   const usePayment = settings?.enablePaymentGateway ?? false
 
   const lead = await prisma.lead.create({
@@ -70,14 +74,14 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
       dob: data.dob || null,
       tob: data.tob || null,
       pob: data.pob || null,
-      amount: service.price,
+      amount: effectivePrice,
       paymentStatus: usePayment ? "PENDING" : null,
     },
   })
 
   if (!usePayment) {
     const waMessage = [
-      `Hi, I'd like to book *${service.title}* (₹${service.price}).`,
+      `Hi, I'd like to book *${service.title}* (₹${effectivePrice}).`,
       `Name: ${data.name}`,
       `WhatsApp: ${data.whatsapp}`,
       data.email ? `Email: ${data.email}` : null,
@@ -98,7 +102,7 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
   }
 
   const order = await getRazorpay().orders.create({
-    amount: service.price * 100,
+    amount: effectivePrice * 100,
     currency: "INR",
     receipt: lead.id,
     notes: { leadId: lead.id, serviceId: service.id },

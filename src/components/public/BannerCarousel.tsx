@@ -40,7 +40,7 @@ export function BannerCarousel({ banners }: { banners: BannerItem[] }) {
             {(banner.title || banner.subtitle) && (
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex flex-col justify-end p-6 md:p-12">
                 {banner.title && (
-                  <h3 className="text-2xl md:text-4xl font-black text-white mb-2 leading-tight">{banner.title}</h3>
+                  <h3 className="font-serif text-2xl md:text-4xl font-bold text-white mb-2 leading-tight">{banner.title}</h3>
                 )}
                 {banner.subtitle && (
                   <p className="text-white/90 text-sm md:text-lg font-medium max-w-xl">{banner.subtitle}</p>

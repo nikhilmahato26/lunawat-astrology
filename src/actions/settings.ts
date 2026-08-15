@@ -45,6 +45,8 @@ export async function updateServices(services: any[]) {
         isPopular: s.isPopular,
         isActive: s.isActive ?? true,
         order: i,
+        offerType: s.offerType || null,
+        offerValue: s.offerType ? s.offerValue : null,
       }))
     })
   }, TX_OPTS)

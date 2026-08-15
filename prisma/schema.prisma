@@ -91,6 +91,10 @@ model Service {          // Consultations
   order         Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now()) @updatedAt
+
+  // Offer (shown in the dedicated Offers section, without leaving Services)
+  offerType     String?  // "FLAT" | "PERCENT"
+  offerValue    Int?     // rupees off if FLAT, percent off (0-100) if PERCENT
 }
 
 model Stat {

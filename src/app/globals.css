@@ -3,16 +3,18 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, "Times New Roman", serif;
 
-  --color-gold-400: #E5C158;
-  --color-gold-500: #D4AF37;
-  --color-gold-600: #B8962A;
+  /* Celestial theme: deep navy + warm cream + coral accent */
+  --color-gold-400: #F5A78C;
+  --color-gold-500: #EE8266;
+  --color-gold-600: #D96A50;
 
-  --color-brand-orange: #ea580c;
-  --color-brand-peach: #fff7ed;
-  --color-brand-cream: #ffedd5;
-  --color-brand-teal: #0f766e;
-  --color-brand-brown: #431407;
+  --color-brand-orange: #EE8266;
+  --color-brand-peach: #F8EEDF;
+  --color-brand-cream: #F0E2CB;
+  --color-brand-teal: #2A2750;
+  --color-brand-brown: #211E3E;
 }
 :root {
   --background: #ffffff;
