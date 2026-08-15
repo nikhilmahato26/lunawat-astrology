@@ -243,15 +243,6 @@ export default async function HomePage() {
                       Most Popular
                     </div>
                   )}
-                  
-                  {/* Category badge */}
-                  {service.category && (
-                    <div className="mb-3">
-                      <span className="inline-block bg-orange-50 text-brand-orange text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-orange-100">
-                        {service.category}
-                      </span>
-                    </div>
-                  )}
 
                   <h3 className="text-2xl font-black mb-3">{service.title}</h3>
                   <div className="text-sm font-medium text-brand-brown/60 mb-4 flex items-center gap-2">

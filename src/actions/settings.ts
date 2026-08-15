@@ -31,7 +31,6 @@ export async function updateServices(services: any[]) {
     await tx.service.createMany({
       data: services.map((s, i) => ({
         title: s.title,
-        category: s.category || null,
         mode: s.mode,
         price: s.price,
         originalPrice: s.originalPrice,

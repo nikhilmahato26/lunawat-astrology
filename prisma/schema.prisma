@@ -70,8 +70,9 @@ model SiteSettings {
   ogImageUrl      String?
 
   // Payments
-  enablePaymentGateway Boolean @default(false)
-  bookingFields        String[] @default([])     // global: ["dob","tob","pob","message"]
+  enablePaymentGateway Boolean  @default(false)
+  bookingFields        String[] @default(["email", "category", "dob", "tob", "pob", "message"])  // a field shows on the booking form only if its key is present
+  consultationCategories String[] @default(["Kundli", "Vastu", "Marriage", "Career", "Business", "Remedies"])  // admin-managed, shown as a field on the booking form
 
   isPublished   Boolean  @default(false)
   updatedAt     DateTime @updatedAt
@@ -80,7 +81,6 @@ model SiteSettings {
 model Service {          // Consultations
   id            String   @id @default(cuid())
   title         String
-  category      String?                          // e.g. "Kundli", "Vastu", "Marriage"
   mode          String   @default("VIDEO_CALL")  // VIDEO_CALL | PHONE_CALL | IN_PERSON | CHAT
   price         Int
   originalPrice Int?
@@ -171,6 +171,7 @@ model Lead {
   id        String   @id @default(cuid())
   name      String
   phone     String
+  whatsapp  String
   email     String?
   serviceId String?
   message   String?  @db.Text
@@ -182,6 +183,7 @@ model Lead {
   dob       String?  // Date of Birth
   tob       String?  // Time of Birth
   pob       String?  // Place of Birth
+  category  String?  // What the consultation is about, e.g. "Kundli", "Vastu", "Marriage"
 
   // Payment (booking source only)
   amount             Int?     // in rupees, snapshot of Service.price at booking time

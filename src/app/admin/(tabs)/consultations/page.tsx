@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { ConsultationsForm } from "./ConsultationsForm"
+import { ALL_BOOKING_FIELDS } from "@/components/public/BookingForm"
 
 export default async function ConsultationsTab() {
   const [services, settings] = await Promise.all([
@@ -13,7 +14,8 @@ export default async function ConsultationsTab() {
       <ConsultationsForm
         initialServices={services}
         enablePaymentGateway={settings?.enablePaymentGateway ?? false}
-        initialBookingFields={(settings?.bookingFields as string[]) ?? []}
+        initialBookingFields={settings?.bookingFields ?? ALL_BOOKING_FIELDS}
+        initialCategories={settings?.consultationCategories ?? []}
       />
     </div>
   )

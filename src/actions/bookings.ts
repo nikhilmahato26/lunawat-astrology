@@ -5,20 +5,26 @@ import { getRazorpay } from "@/lib/razorpay"
 import { z } from "zod"
 import crypto from "crypto"
 
+// Name, phone, and WhatsApp are always required — every booking needs a way to reach the
+// customer. email/category/dob/tob/pob/message stay optional because the admin can hide
+// any of them from the booking form (SiteSettings.bookingFields) — the client only renders
+// + requires whichever of those are configured to show, so the server can't force them.
 const bookingSchema = z.object({
   serviceId: z.string().min(1),
   name: z.string().trim().min(2, "Please enter your name"),
   phone: z.string().trim().min(8, "Please enter a valid phone number"),
-  email: z.union([z.string().trim().email(), z.literal("")]).optional(),
-  dob: z.string().trim().min(1, "Date of birth is required"),
-  tob: z.string().trim().min(1, "Time of birth is required"),
-  pob: z.string().trim().min(1, "Place of birth is required"),
+  whatsapp: z.string().trim().min(8, "Please enter a valid WhatsApp number"),
+  email: z.union([z.string().trim().email("Please enter a valid email"), z.literal("")]).optional(),
+  category: z.string().trim().optional(),
+  dob: z.string().trim().optional(),
+  tob: z.string().trim().optional(),
+  pob: z.string().trim().optional(),
   message: z.string().trim().optional(),
 })
 
 type BookingResult =
   | { success: false; error: string }
-  | { success: true; mode: "whatsapp"; whatsapp: string | null; message: string }
+  | { success: true; mode: "whatsapp"; businessWhatsapp: string | null; message: string }
   | {
       success: true
       mode: "payment"
@@ -55,13 +61,15 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
     data: {
       name: data.name,
       phone: data.phone,
+      whatsapp: data.whatsapp,
       email: data.email || null,
       serviceId: data.serviceId,
       message: data.message || null,
       source: "booking",
-      dob: data.dob,
-      tob: data.tob,
-      pob: data.pob,
+      category: data.category || null,
+      dob: data.dob || null,
+      tob: data.tob || null,
+      pob: data.pob || null,
       amount: service.price,
       paymentStatus: usePayment ? "PENDING" : null,
     },
@@ -71,15 +79,18 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
     const waMessage = [
       `Hi, I'd like to book *${service.title}* (₹${service.price}).`,
       `Name: ${data.name}`,
-      `DOB: ${data.dob}`,
-      `TOB: ${data.tob}`,
-      `POB: ${data.pob}`,
+      `WhatsApp: ${data.whatsapp}`,
+      data.email ? `Email: ${data.email}` : null,
+      data.category ? `Category: ${data.category}` : null,
+      data.dob ? `DOB: ${data.dob}` : null,
+      data.tob ? `TOB: ${data.tob}` : null,
+      data.pob ? `POB: ${data.pob}` : null,
       data.message ? `Message: ${data.message}` : null,
     ]
       .filter(Boolean)
       .join("\n")
 
-    return { success: true, mode: "whatsapp", whatsapp: settings?.whatsapp ?? null, message: waMessage }
+    return { success: true, mode: "whatsapp", businessWhatsapp: settings?.whatsapp ?? null, message: waMessage }
   }
 
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {

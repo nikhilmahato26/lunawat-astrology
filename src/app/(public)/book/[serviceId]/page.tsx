@@ -10,7 +10,7 @@ export default async function BookServicePage({ params }: { params: Promise<{ se
 
   const [service, settings] = await Promise.all([
     prisma.service.findUnique({ where: { id: serviceId } }),
-    prisma.siteSettings.findUnique({ where: { id: "singleton" }, select: { bookingFields: true } }),
+    prisma.siteSettings.findUnique({ where: { id: "singleton" }, select: { bookingFields: true, consultationCategories: true } }),
   ])
 
   if (!service || !service.isActive) notFound()
@@ -25,11 +25,6 @@ export default async function BookServicePage({ params }: { params: Promise<{ se
 
           <div className="bg-white rounded-[2rem] shadow-2xl shadow-brand-orange/5 border border-orange-50 p-8 md:p-10">
             <h1 className="text-3xl md:text-4xl font-black mb-2">{service.title}</h1>
-            {service.category && (
-              <span className="inline-block bg-orange-50 text-brand-orange text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-orange-100 mb-3">
-                {service.category}
-              </span>
-            )}
             {service.description && (
               <p className="text-brand-brown/70 text-sm leading-relaxed mb-4">{service.description}</p>
             )}
@@ -44,7 +39,8 @@ export default async function BookServicePage({ params }: { params: Promise<{ se
 
             <BookingForm
               service={{ id: service.id, title: service.title, price: service.price }}
-              bookingFields={(settings?.bookingFields as string[]) ?? []}
+              bookingFields={settings?.bookingFields}
+              categories={settings?.consultationCategories ?? []}
             />
           </div>
         </FadeIn>

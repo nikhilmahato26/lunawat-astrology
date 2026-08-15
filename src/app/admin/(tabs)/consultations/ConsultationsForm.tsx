@@ -1,23 +1,15 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { X } from "lucide-react"
 import { TextField, TextArea, SaveBar, ToggleSwitch } from "@/components/admin/ui"
 import { RepeatableList } from "@/components/admin/RepeatableList"
 import { updateServices, updateSiteSettings } from "@/actions/settings"
 import type { Service } from "@prisma/client"
 
-const PRESET_CATEGORIES = [
-  "Kundli",
-  "Vastu",
-  "Marriage",
-  "Career",
-  "Business",
-  "Remedies",
-  "Numerology",
-  "Health",
-]
-
 const BOOKING_FIELD_OPTIONS: { key: string; label: string }[] = [
+  { key: "email",    label: "Email" },
+  { key: "category", label: "Category (what is this about)" },
   { key: "dob",     label: "Date of Birth" },
   { key: "tob",     label: "Time of Birth" },
   { key: "pob",     label: "Place of Birth" },
@@ -31,26 +23,31 @@ export function ConsultationsForm({
   initialServices,
   enablePaymentGateway: initialEnablePaymentGateway,
   initialBookingFields,
+  initialCategories,
 }: {
   initialServices: Service[]
   enablePaymentGateway: boolean
   initialBookingFields: string[]
+  initialCategories: string[]
 }) {
   const [services, setServices] = useState<Service[]>(initialServices)
   const [enablePaymentGateway, setEnablePaymentGateway] = useState(initialEnablePaymentGateway)
   const [bookingFields, setBookingFields] = useState<string[]>(initialBookingFields)
+  const [categories, setCategories] = useState<string[]>(initialCategories)
+  const [newCategory, setNewCategory] = useState("")
   const [isPending, startTransition] = useTransition()
 
   const isDirty =
     JSON.stringify(services) !== JSON.stringify(initialServices) ||
     enablePaymentGateway !== initialEnablePaymentGateway ||
-    JSON.stringify(bookingFields) !== JSON.stringify(initialBookingFields)
+    JSON.stringify(bookingFields) !== JSON.stringify(initialBookingFields) ||
+    JSON.stringify(categories) !== JSON.stringify(initialCategories)
 
   const handleSave = () => {
     startTransition(async () => {
       await Promise.all([
         updateServices(services),
-        updateSiteSettings({ enablePaymentGateway, bookingFields }),
+        updateSiteSettings({ enablePaymentGateway, bookingFields, consultationCategories: categories }),
       ])
     })
   }
@@ -61,13 +58,21 @@ export function ConsultationsForm({
     )
   }
 
-  const renderService = (service: Service, index: number, updateItem: (idx: number, s: Service) => void) => {
-    const isCustomCategory =
-      service.category != null &&
-      service.category !== "" &&
-      !PRESET_CATEGORIES.includes(service.category)
-    const categoryDropdownValue = isCustomCategory ? "__custom__" : (service.category ?? "")
+  const addCategory = () => {
+    const trimmed = newCategory.trim()
+    if (!trimmed || categories.includes(trimmed)) {
+      setNewCategory("")
+      return
+    }
+    setCategories((prev) => [...prev, trimmed])
+    setNewCategory("")
+  }
 
+  const removeCategory = (name: string) => {
+    setCategories((prev) => prev.filter((c) => c !== name))
+  }
+
+  const renderService = (service: Service, index: number, updateItem: (idx: number, s: Service) => void) => {
     return (
       <div className="space-y-5 pt-1">
         {/* ── Title + Active ── */}
@@ -88,50 +93,19 @@ export function ConsultationsForm({
           </div>
         </div>
 
-        {/* ── Category + Mode ── */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-zinc-900">Category</label>
-            <select
-              value={categoryDropdownValue}
-              onChange={(e) => {
-                if (e.target.value === "__custom__") {
-                  updateItem(index, { ...service, category: "" })
-                } else {
-                  updateItem(index, { ...service, category: e.target.value || null })
-                }
-              }}
-              className={selectClass}
-            >
-              <option value="">— None —</option>
-              {PRESET_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-              <option value="__custom__">Custom…</option>
-            </select>
-            {(categoryDropdownValue === "__custom__" || isCustomCategory) && (
-              <input
-                placeholder="Enter custom category"
-                value={service.category ?? ""}
-                onChange={(e) => updateItem(index, { ...service, category: e.target.value })}
-                className="mt-1 w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black text-sm"
-              />
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-zinc-900">Mode</label>
-            <select
-              value={service.mode}
-              onChange={(e) => updateItem(index, { ...service, mode: e.target.value as Service["mode"] })}
-              className={selectClass}
-            >
-              <option value="VIDEO_CALL">Video Call</option>
-              <option value="PHONE_CALL">Phone Call</option>
-              <option value="IN_PERSON">In Person</option>
-              <option value="CHAT">Chat</option>
-            </select>
-          </div>
+        {/* ── Mode ── */}
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-zinc-900">Mode</label>
+          <select
+            value={service.mode}
+            onChange={(e) => updateItem(index, { ...service, mode: e.target.value as Service["mode"] })}
+            className={selectClass}
+          >
+            <option value="VIDEO_CALL">Video Call</option>
+            <option value="PHONE_CALL">Phone Call</option>
+            <option value="IN_PERSON">In Person</option>
+            <option value="CHAT">Chat</option>
+          </select>
         </div>
 
         {/* ── Price + Original + Duration ── */}
@@ -200,27 +174,59 @@ export function ConsultationsForm({
           />
         </div>
 
+
+
         <div className="space-y-2">
           <label className="block text-sm font-medium text-zinc-900">
-            Booking Form Fields
+            Consultation Categories
             <span className="ml-2 text-xs text-zinc-400 font-normal">
-              (applies to all services)
+              (options shown in the booking form&apos;s Category field)
             </span>
           </label>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-3">
-            {BOOKING_FIELD_OPTIONS.map(({ key, label }) => (
-              <label key={key} className="flex items-center gap-2 py-1 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={bookingFields.includes(key)}
-                  onChange={(e) => toggleBookingField(key, e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300 accent-black"
-                />
-                <span className="text-sm text-zinc-700">{label}</span>
-              </label>
-            ))}
+          <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-3 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => (
+                <span
+                  key={cat}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-white border border-zinc-300 rounded-full text-zinc-700"
+                >
+                  {cat}
+                  <button
+                    type="button"
+                    onClick={() => removeCategory(cat)}
+                    className="text-zinc-400 hover:text-red-600 transition-colors"
+                    aria-label={`Remove ${cat}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+              {categories.length === 0 && (
+                <span className="text-xs text-zinc-400">No categories yet — add one below.</span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    addCategory()
+                  }
+                }}
+                placeholder="e.g. Numerology"
+                className="flex-1 px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black text-sm bg-white"
+              />
+              <button
+                type="button"
+                onClick={addCategory}
+                className="px-4 py-2 text-sm font-medium bg-black text-white rounded-md hover:bg-zinc-800 transition-colors"
+              >
+                Add
+              </button>
+            </div>
           </div>
-          <p className="text-xs text-zinc-400">Leave all unchecked to show all fields.</p>
         </div>
       </section>
 
@@ -240,7 +246,6 @@ export function ConsultationsForm({
             ({
               id: crypto.randomUUID(),
               title: "New Consultation",
-              category: null,
               mode: "VIDEO_CALL",
               price: 500,
               originalPrice: null,

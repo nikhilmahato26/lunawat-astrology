@@ -21,20 +21,25 @@ function loadRazorpayScript(): Promise<boolean> {
   })
 }
 
+// Fallback used only when no SiteSettings row exists at all (shouldn't happen in practice).
+export const ALL_BOOKING_FIELDS = ["email", "category", "dob", "tob", "pob", "message"]
+
 interface BookingFormProps {
   service: { id: string; title: string; price: number }
-  /** Which fields to show. If empty/undefined, shows all (legacy). */
+  /** Which fields to show — a field renders only if its key is present here. */
   bookingFields?: string[]
+  /** Admin-configured category options for the Category field. */
+  categories?: string[]
 }
 
-export function BookingForm({ service, bookingFields }: BookingFormProps) {
+export function BookingForm({ service, bookingFields, categories = [] }: BookingFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState("")
 
-  // If no config, show everything
-  const show = (key: string) =>
-    !bookingFields || bookingFields.length === 0 || bookingFields.includes(key)
+  // Checkbox state is the single source of truth — a field shows only if its key is present.
+  const fields = bookingFields ?? ALL_BOOKING_FIELDS
+  const show = (key: string) => fields.includes(key)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -45,7 +50,9 @@ export function BookingForm({ service, bookingFields }: BookingFormProps) {
       serviceId: service.id,
       name: String(formData.get("name") || ""),
       phone: String(formData.get("phone") || ""),
+      whatsapp: String(formData.get("whatsapp") || ""),
       email: String(formData.get("email") || ""),
+      category: String(formData.get("category") || ""),
       dob: String(formData.get("dob") || ""),
       tob: String(formData.get("tob") || ""),
       pob: String(formData.get("pob") || ""),
@@ -61,7 +68,7 @@ export function BookingForm({ service, bookingFields }: BookingFormProps) {
       }
 
       if (result.mode === "whatsapp") {
-        const digits = result.whatsapp?.replace(/[^0-9]/g, "") || ""
+        const digits = result.businessWhatsapp?.replace(/[^0-9]/g, "") || ""
         window.location.href = `https://wa.me/${digits}?text=${encodeURIComponent(result.message)}`
         return
       }
@@ -112,7 +119,7 @@ export function BookingForm({ service, bookingFields }: BookingFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg font-medium">{error}</div>}
 
-      {/* Name + Phone — always shown */}
+      {/* Name + Phone — always required */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-bold text-brand-brown mb-1">Full Name *</label>
@@ -124,11 +131,32 @@ export function BookingForm({ service, bookingFields }: BookingFormProps) {
         </div>
       </div>
 
-      {/* Email — always shown */}
+      {/* WhatsApp — always required */}
       <div>
-        <label className="block text-sm font-bold text-brand-brown mb-1">Email (Optional)</label>
-        <input name="email" type="email" className={inputClass} />
+        <label className="block text-sm font-bold text-brand-brown mb-1">WhatsApp Number *</label>
+        <input name="whatsapp" type="tel" required className={inputClass} />
       </div>
+
+      {/* Email — conditional */}
+      {show("email") && (
+        <div>
+          <label className="block text-sm font-bold text-brand-brown mb-1">Email (Optional)</label>
+          <input name="email" type="email" className={inputClass} />
+        </div>
+      )}
+
+      {/* Category — conditional, only if admin has configured options */}
+      {show("category") && categories.length > 0 && (
+        <div>
+          <label className="block text-sm font-bold text-brand-brown mb-1">What is this about? *</label>
+          <select name="category" required defaultValue="" className={inputClass}>
+            <option value="" disabled>Select a category</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* DOB + TOB + POB — conditional */}
       {(show("dob") || show("tob") || show("pob")) && (
