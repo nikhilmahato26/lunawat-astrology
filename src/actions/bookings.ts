@@ -3,8 +3,24 @@
 import { prisma } from "@/lib/prisma"
 import { getRazorpay } from "@/lib/razorpay"
 import { getOfferPrice } from "@/lib/pricing"
+import { sendEmail } from "@/lib/email"
 import { z } from "zod"
 import crypto from "crypto"
+
+// Short, human-friendly reference derived from the Lead's own id — unique for free,
+// no extra schema/column needed. e.g. "LAP-8F3K2Q1H"
+function getBookingRef(leadId: string) {
+  return `LAP-${leadId.slice(-8).toUpperCase()}`
+}
+
+function detailsTable(rows: [string, string][]) {
+  return `<table cellpadding="0" cellspacing="0">${rows
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:4px 16px 4px 0;color:#666;font-size:14px;">${k}</td><td style="padding:4px 0;font-weight:600;font-size:14px;">${v}</td></tr>`
+    )
+    .join("")}</table>`
+}
 
 // Name, phone, and WhatsApp are always required — every booking needs a way to reach the
 // customer. email/category/dob/tob/pob/message stay optional because the admin can hide
@@ -133,7 +149,7 @@ export async function verifyBookingPayment(input: {
   razorpay_order_id: string
   razorpay_payment_id: string
   razorpay_signature: string
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; bookingId?: string }> {
   const lead = await prisma.lead.findUnique({ where: { id: input.leadId } })
 
   if (!lead || lead.razorpayOrderId !== input.razorpay_order_id) {
@@ -149,7 +165,7 @@ export async function verifyBookingPayment(input: {
     return { success: false, error: "Payment verification failed." }
   }
 
-  await prisma.lead.update({
+  const updated = await prisma.lead.update({
     where: { id: lead.id },
     data: {
       paymentStatus: "PAID",
@@ -157,5 +173,65 @@ export async function verifyBookingPayment(input: {
     },
   })
 
-  return { success: true }
+  const bookingId = getBookingRef(updated.id)
+
+  // Best-effort — payment already succeeded and the Lead is already marked PAID, so a
+  // transient SMTP failure here must not make the customer think their payment failed.
+  try {
+    const [service, settings] = await Promise.all([
+      updated.serviceId ? prisma.service.findUnique({ where: { id: updated.serviceId } }) : null,
+      prisma.siteSettings.findUnique({ where: { id: "singleton" } }),
+    ])
+
+    const businessName = settings?.businessName || "Lunawat Astro Point"
+
+    const rows: [string, string][] = [
+      ["Booking ID", bookingId],
+      ["Service", service?.title || "Consultation"],
+      ["Amount Paid", `₹${updated.amount ?? ""}`],
+      ["Name", updated.name],
+      ["Phone", updated.phone],
+      ["WhatsApp", updated.whatsapp],
+      ...(updated.email ? ([["Email", updated.email]] as [string, string][]) : []),
+      ...(updated.category ? ([["Category", updated.category]] as [string, string][]) : []),
+      ...(updated.dob ? ([["Date of Birth", updated.dob]] as [string, string][]) : []),
+      ...(updated.tob ? ([["Time of Birth", updated.tob]] as [string, string][]) : []),
+      ...(updated.pob ? ([["Place of Birth", updated.pob]] as [string, string][]) : []),
+      ...(updated.message ? ([["Message", updated.message]] as [string, string][]) : []),
+    ]
+
+    const table = detailsTable(rows)
+
+    if (updated.email) {
+      await sendEmail({
+        to: updated.email,
+        subject: `Booking Confirmed — ${bookingId}`,
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+            <h2 style="margin-bottom:4px;">Thank you, ${updated.name}!</h2>
+            <p style="color:#555;">Your booking with ${businessName} is confirmed.</p>
+            ${table}
+            <p style="color:#555;margin-top:16px;">We'll reach out to you shortly to schedule your consultation.</p>
+          </div>
+        `,
+      })
+    }
+
+    if (process.env.LEAD_NOTIFY_TO) {
+      await sendEmail({
+        to: process.env.LEAD_NOTIFY_TO,
+        subject: `New Paid Booking — ${bookingId}`,
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+            <h2 style="margin-bottom:4px;">New paid booking received</h2>
+            ${table}
+          </div>
+        `,
+      })
+    }
+  } catch (err) {
+    console.error("Failed to send booking confirmation emails:", err)
+  }
+
+  return { success: true, bookingId }
 }

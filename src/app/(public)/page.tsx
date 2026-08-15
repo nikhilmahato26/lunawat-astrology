@@ -324,7 +324,7 @@ export default async function HomePage() {
         const offerServices = services.filter((s: (typeof services)[number]) => getOfferPrice(s) !== null)
         if (offerServices.length === 0) return null
         return (
-          <section className="relative py-24 bg-brand-brown overflow-hidden">
+          <section id="offers" className="relative py-24 bg-brand-brown overflow-hidden scroll-mt-20">
             <CelestialBg tone="dark" className="absolute -top-32 -left-32 w-[420px] h-[420px] opacity-30" />
             <CelestialBg tone="dark" className="absolute -bottom-32 -right-32 w-[420px] h-[420px] opacity-30" />
             <div className="relative max-w-6xl mx-auto px-4 lg:px-8">

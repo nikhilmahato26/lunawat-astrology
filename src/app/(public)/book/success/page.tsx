@@ -2,7 +2,13 @@ import Link from "next/link"
 import { CheckCircle2 } from "lucide-react"
 import { FadeIn } from "@/components/public/FadeIn"
 
-export default function BookingSuccessPage() {
+export default async function BookingSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ bookingId?: string }>
+}) {
+  const { bookingId } = await searchParams
+
   return (
     <div className="bg-gradient-to-b from-brand-peach to-[#FCF6EC] min-h-screen text-brand-brown font-sans flex items-center justify-center px-4">
       <FadeIn>
@@ -11,9 +17,15 @@ export default function BookingSuccessPage() {
             <CheckCircle2 size={32} />
           </div>
           <h1 className="font-serif text-2xl font-bold mb-3">Booking Confirmed!</h1>
-          <p className="text-brand-brown/70 mb-8">
+          <p className="text-brand-brown/70 mb-4">
             Your payment was successful. We&apos;ll reach out to you shortly to schedule your consultation.
           </p>
+          {bookingId && (
+            <div className="inline-flex items-center gap-2 bg-brand-peach px-4 py-2 rounded-full mb-6">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-brown/50">Booking ID</span>
+              <span className="font-mono font-bold text-brand-orange">{bookingId}</span>
+            </div>
+          )}
           <Link
             href="/"
             className="inline-flex items-center justify-center h-14 px-8 bg-brand-orange text-white font-bold rounded-xl hover:bg-gold-600 transition-colors"
