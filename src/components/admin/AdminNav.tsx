@@ -6,6 +6,7 @@ import { logoutAction } from "@/actions/auth"
 
 const tabs = [
   { name: "Your Details", href: "/admin/details" },
+  { name: "Banners", href: "/admin/banners" },
   { name: "Consultations", href: "/admin/consultations" },
   { name: "About, Trust & FAQ", href: "/admin/about" },
   { name: "Certifications", href: "/admin/certifications" },

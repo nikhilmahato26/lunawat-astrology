@@ -129,6 +129,17 @@ model Testimonial {
   isActive  Boolean @default(true)
 }
 
+model Banner {          // Big promotional banners shown near the top of the landing page
+  id        String  @id @default(cuid())
+  imageUrl  String
+  publicId  String                    // Cloudinary public_id for deletion
+  title     String?
+  subtitle  String?
+  linkUrl   String?
+  order     Int     @default(0)
+  isActive  Boolean @default(true)
+}
+
 model GalleryItem {
   id         String  @id @default(cuid())
   imageUrl   String

@@ -9,6 +9,7 @@ import {
 import { FadeIn } from "@/components/public/FadeIn"
 import { LiteYouTube } from "@/components/public/LiteYouTube"
 import { GalleryGrid } from "@/components/public/GalleryGrid"
+import { BannerCarousel } from "@/components/public/BannerCarousel"
 
 const getSettings = unstable_cache(
   async () => prisma.siteSettings.findUnique({ where: { id: "singleton" } }),
@@ -46,6 +47,12 @@ const getVideos = unstable_cache(
   { tags: ['site-data'] }
 )
 
+const getBanners = unstable_cache(
+  async () => prisma.banner.findMany({ where: { isActive: true }, orderBy: { order: 'asc' } }),
+  ['banners'],
+  { tags: ['site-data'] }
+)
+
 export default async function HomePage() {
   const settings = await getSettings()
   const services = await getServices()
@@ -53,6 +60,7 @@ export default async function HomePage() {
   const certifications = await getCertifications()
   const gallery = await getGallery()
   const videos = await getVideos()
+  const banners = await getBanners()
 
   if (!settings) return null
 
@@ -318,6 +326,17 @@ export default async function HomePage() {
                    </FadeIn>
                  ))}
               </div>
+            </FadeIn>
+          </div>
+        </section>
+      )}
+
+      {/* 6b. Banners */}
+      {banners.length > 0 && (
+        <section className="px-4 md:px-8 py-16">
+          <div className="max-w-6xl mx-auto">
+            <FadeIn>
+              <BannerCarousel banners={banners} />
             </FadeIn>
           </div>
         </section>

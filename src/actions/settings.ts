@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 
+// Neon's serverless Postgres auto-suspends when idle and can take a few seconds to wake
+// on the next query. Prisma's default transaction maxWait (2s) is too short to survive
+// that cold start, causing a P2028 "Unable to start a transaction" error — so every
+// $transaction here gets a longer budget.
+const TX_OPTS = { maxWait: 10000, timeout: 15000 }
+
 export async function updateSiteSettings(data: Partial<Parameters<typeof prisma.siteSettings.update>[0]['data']>) {
   const session = await auth()
   if (!session?.user) {
@@ -41,7 +47,7 @@ export async function updateServices(services: any[]) {
         order: i,
       }))
     })
-  })
+  }, TX_OPTS)
 
   revalidatePath('/', 'layout')
   
@@ -73,7 +79,7 @@ export async function updateAboutData(data: { title: string, body: string, stats
         order: i,
       }))
     })
-  })
+  }, TX_OPTS)
 
   revalidatePath('/', 'layout')
   
@@ -114,7 +120,7 @@ export async function updateContactData(data: {
         create: { day: h.day, openTime: h.openTime, closeTime: h.closeTime, isClosed: h.isClosed }
       })
     }
-  })
+  }, TX_OPTS)
 
   revalidatePath('/', 'layout')
   
@@ -152,6 +158,40 @@ export async function updateMedia(data: {
       }))
     })
   }
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}
+
+export async function updateBanners(banners: {
+  imageUrl: string
+  publicId: string
+  title?: string
+  subtitle?: string
+  linkUrl?: string
+  isActive?: boolean
+}[]) {
+  const session = await auth()
+  if (!session?.user) throw new Error("Unauthorized")
+
+  const valid = banners.filter((b) => b.imageUrl)
+
+  await prisma.$transaction(async (tx) => {
+    await tx.banner.deleteMany()
+    if (valid.length > 0) {
+      await tx.banner.createMany({
+        data: valid.map((b, i) => ({
+          imageUrl: b.imageUrl,
+          publicId: b.publicId,
+          title: b.title || null,
+          subtitle: b.subtitle || null,
+          linkUrl: b.linkUrl || null,
+          isActive: b.isActive ?? true,
+          order: i,
+        }))
+      })
+    }
+  }, TX_OPTS)
 
   revalidatePath('/', 'layout')
   return { success: true }
