@@ -22,7 +22,7 @@ export default function LoginPage() {
               type="email"
               required
               className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="drrahuljain143@gmail.com"
+              placeholder="drrahuljainastrology@gmail.com"
             />
           </div>
           
