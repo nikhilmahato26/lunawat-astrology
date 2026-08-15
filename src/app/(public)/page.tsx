@@ -189,7 +189,7 @@ export default async function HomePage() {
               </h2>
               <div className="w-16 h-1 bg-brand-orange rounded-full" />
               <div className="prose prose-lg text-brand-brown/80">
-                {settings.aboutBody?.split('\n').map((paragraph, i) => (
+                {settings.aboutBody?.split('\n').map((paragraph: string, i: number) => (
                   <p key={i}>{paragraph}</p>
                 ))}
               </div>
@@ -235,7 +235,7 @@ export default async function HomePage() {
           </FadeIn>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, i) => (
+            {services.map((service: (typeof services)[number], i: number) => (
               <FadeIn key={service.id} delay={i * 0.1}>
                 <div className={`relative flex flex-col bg-white p-8 rounded-[2rem] border-2 h-full transition-transform hover:-translate-y-1 ${service.isPopular ? 'border-brand-orange shadow-2xl shadow-brand-orange/10' : 'border-orange-50 shadow-lg shadow-orange-900/5'}`}>
                   {service.isPopular && (
@@ -286,7 +286,7 @@ export default async function HomePage() {
               <GraduationCap size={48} className="mx-auto text-brand-orange mb-6" />
               <h2 className="text-3xl md:text-4xl font-black text-brand-brown mb-12">Certified & Recognized</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                 {certifications.map((cert, i) => (
+                 {certifications.map((cert: (typeof certifications)[number], i: number) => (
                    <FadeIn key={cert.id} delay={i * 0.1}>
                      <div className="bg-white rounded-[2rem] overflow-hidden shadow-lg shadow-orange-900/5 border border-orange-50 h-full flex flex-col hover:-translate-y-1 transition-transform">
                        {cert.imageUrl ? (
@@ -363,7 +363,7 @@ export default async function HomePage() {
                 <div>
                   <h3 className="text-2xl font-black text-brand-brown mb-8 text-center md:text-left">Videos</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {videos.map((vid, i) => (
+                    {videos.map((vid: (typeof videos)[number], i: number) => (
                       <FadeIn key={vid.id} delay={i * 0.1}>
                         <div className="rounded-3xl overflow-hidden shadow-xl shadow-orange-900/5">
                           <LiteYouTube videoId={vid.videoId} title={vid.title || "YouTube Video"} />

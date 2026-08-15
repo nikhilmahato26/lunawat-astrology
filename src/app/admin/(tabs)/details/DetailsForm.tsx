@@ -41,7 +41,7 @@ export function DetailsForm({ settings }: { settings: SiteSettings }) {
         credentials: formData.credentials,
         tagline: formData.tagline,
         experience: formData.experience,
-        languages: formData.languages.split(",").map(s => s.trim()).filter(Boolean),
+        languages: formData.languages.split(",").map((s: string) => s.trim()).filter(Boolean),
         heroHeadline: formData.heroHeadline,
         heroSubtext: formData.heroSubtext,
         heroImageUrl: formData.heroImageUrl,
@@ -112,7 +112,7 @@ export function DetailsForm({ settings }: { settings: SiteSettings }) {
             <SuggestionChips 
               suggestions={["English", "Hindi", "Marathi", "Gujarati"]}
               onSelect={(lang) => {
-                const current = formData.languages.split(",").map(s => s.trim()).filter(Boolean)
+                const current = formData.languages.split(",").map((s: string) => s.trim()).filter(Boolean)
                 if (!current.includes(lang)) {
                   setFormData(prev => ({ ...prev, languages: [...current, lang].join(", ") }))
                 }
