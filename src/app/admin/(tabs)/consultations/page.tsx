@@ -10,7 +10,11 @@ export default async function ConsultationsTab() {
   return (
     <div>
       <h2 className="text-2xl font-black mb-6">Consultations</h2>
-      <ConsultationsForm initialServices={services} enablePaymentGateway={settings?.enablePaymentGateway ?? false} />
+      <ConsultationsForm
+        initialServices={services}
+        enablePaymentGateway={settings?.enablePaymentGateway ?? false}
+        initialBookingFields={(settings?.bookingFields as string[]) ?? []}
+      />
     </div>
   )
 }

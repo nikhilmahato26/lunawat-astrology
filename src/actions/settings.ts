@@ -37,7 +37,6 @@ export async function updateServices(services: any[]) {
         originalPrice: s.originalPrice,
         durationMin: s.durationMin,
         description: s.description || null,
-        bookingFields: s.bookingFields ?? [],
         isPopular: s.isPopular,
         isActive: s.isActive ?? true,
         order: i,

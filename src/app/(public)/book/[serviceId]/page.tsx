@@ -8,7 +8,10 @@ import { BookingForm } from "@/components/public/BookingForm"
 export default async function BookServicePage({ params }: { params: Promise<{ serviceId: string }> }) {
   const { serviceId } = await params
 
-  const service = await prisma.service.findUnique({ where: { id: serviceId } })
+  const [service, settings] = await Promise.all([
+    prisma.service.findUnique({ where: { id: serviceId } }),
+    prisma.siteSettings.findUnique({ where: { id: "singleton" }, select: { bookingFields: true } }),
+  ])
 
   if (!service || !service.isActive) notFound()
 
@@ -41,7 +44,7 @@ export default async function BookServicePage({ params }: { params: Promise<{ se
 
             <BookingForm
               service={{ id: service.id, title: service.title, price: service.price }}
-              bookingFields={service.bookingFields as string[]}
+              bookingFields={(settings?.bookingFields as string[]) ?? []}
             />
           </div>
         </FadeIn>
