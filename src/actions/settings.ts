@@ -31,11 +31,15 @@ export async function updateServices(services: any[]) {
     await tx.service.createMany({
       data: services.map((s, i) => ({
         title: s.title,
+        category: s.category || null,
         mode: s.mode,
         price: s.price,
         originalPrice: s.originalPrice,
         durationMin: s.durationMin,
+        description: s.description || null,
+        bookingFields: s.bookingFields ?? [],
         isPopular: s.isPopular,
+        isActive: s.isActive ?? true,
         order: i,
       }))
     })
@@ -45,6 +49,7 @@ export async function updateServices(services: any[]) {
   
   return { success: true }
 }
+
 
 export async function updateAboutData(data: { title: string, body: string, stats: any[], aboutImageUrl: string }) {
   const session = await auth()

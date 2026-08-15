@@ -244,11 +244,26 @@ export default async function HomePage() {
                     </div>
                   )}
                   
+                  {/* Category badge */}
+                  {service.category && (
+                    <div className="mb-3">
+                      <span className="inline-block bg-orange-50 text-brand-orange text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-orange-100">
+                        {service.category}
+                      </span>
+                    </div>
+                  )}
+
                   <h3 className="text-2xl font-black mb-3">{service.title}</h3>
-                  <div className="text-sm font-medium text-brand-brown/60 mb-6 flex items-center gap-2">
+                  <div className="text-sm font-medium text-brand-brown/60 mb-4 flex items-center gap-2">
                     <Clock size={16} className="text-brand-orange" />
-                    {service.durationMin} mins · <span className="capitalize">{service.mode.replace('_', ' ')}</span>
+                    {service.durationMin} mins · <span className="capitalize">{service.mode.replace(/_/g, ' ').toLowerCase()}</span>
                   </div>
+
+                  {service.description && (
+                    <p className="text-sm text-brand-brown/70 mb-6 leading-relaxed line-clamp-3">
+                      {service.description}
+                    </p>
+                  )}
 
                   <div className="mb-8">
                     <div className="flex items-end gap-3">
@@ -274,6 +289,7 @@ export default async function HomePage() {
                 </div>
               </FadeIn>
             ))}
+
           </div>
         </div>
       </section>
@@ -481,6 +497,20 @@ export default async function HomePage() {
                </div>
             </div>
           </div>
+
+          {settings.mapEmbedUrl && (
+            <div className="mt-12 rounded-3xl overflow-hidden border border-white/10 h-80">
+              <iframe
+                src={settings.mapEmbedUrl}
+                className="w-full h-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+                title="Location Map"
+              />
+            </div>
+          )}
+
           <div className="mt-16 pt-8 border-t border-white/10 text-center text-orange-200/50 font-medium text-sm">
             © {new Date().getFullYear()} {settings.personName}. All rights reserved.
           </div>

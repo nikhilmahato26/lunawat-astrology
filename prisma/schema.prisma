@@ -77,16 +77,20 @@ model SiteSettings {
 }
 
 model Service {          // Consultations
-  id           String  @id @default(cuid())
-  title        String
-  mode         String  @default("VIDEO_CALL")  // VIDEO_CALL | PHONE | IN_PERSON | VIP
-  price        Int
+  id            String   @id @default(cuid())
+  title         String
+  category      String?                          // e.g. "Kundli", "Vastu", "Marriage"
+  mode          String   @default("VIDEO_CALL")  // VIDEO_CALL | PHONE_CALL | IN_PERSON | CHAT
+  price         Int
   originalPrice Int?
-  durationMin  Int?
-  description  String? @db.Text
-  isPopular    Boolean @default(false)
-  order        Int     @default(0)
-  isActive     Boolean @default(true)
+  durationMin   Int?
+  description   String?  @db.Text
+  bookingFields String[] @default([])            // ["dob","tob","pob","message"] — which fields to show
+  isPopular     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
 }
 
 model Stat {

@@ -21,10 +21,20 @@ function loadRazorpayScript(): Promise<boolean> {
   })
 }
 
-export function BookingForm({ service }: { service: { id: string; title: string; price: number } }) {
+interface BookingFormProps {
+  service: { id: string; title: string; price: number }
+  /** Which fields to show. If empty/undefined, shows all (legacy). */
+  bookingFields?: string[]
+}
+
+export function BookingForm({ service, bookingFields }: BookingFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState("")
+
+  // If no config, show everything
+  const show = (key: string) =>
+    !bookingFields || bookingFields.length === 0 || bookingFields.includes(key)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -95,77 +105,62 @@ export function BookingForm({ service }: { service: { id: string; title: string;
     })
   }
 
+  const inputClass =
+    "w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg font-medium">{error}</div>}
 
+      {/* Name + Phone — always shown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-bold text-brand-brown mb-1">Full Name *</label>
-          <input
-            name="name"
-            required
-            className="w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
-          />
+          <input name="name" required className={inputClass} />
         </div>
         <div>
           <label className="block text-sm font-bold text-brand-brown mb-1">Phone Number *</label>
-          <input
-            name="phone"
-            type="tel"
-            required
-            className="w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
-          />
+          <input name="phone" type="tel" required className={inputClass} />
         </div>
       </div>
 
+      {/* Email — always shown */}
       <div>
         <label className="block text-sm font-bold text-brand-brown mb-1">Email (Optional)</label>
-        <input
-          name="email"
-          type="email"
-          className="w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
-        />
+        <input name="email" type="email" className={inputClass} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-bold text-brand-brown mb-1">Date of Birth *</label>
-          <input
-            name="dob"
-            type="date"
-            required
-            className="w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
-          />
+      {/* DOB + TOB + POB — conditional */}
+      {(show("dob") || show("tob") || show("pob")) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {show("dob") && (
+            <div>
+              <label className="block text-sm font-bold text-brand-brown mb-1">Date of Birth *</label>
+              <input name="dob" type="date" required className={inputClass} />
+            </div>
+          )}
+          {show("tob") && (
+            <div>
+              <label className="block text-sm font-bold text-brand-brown mb-1">Time of Birth *</label>
+              <input name="tob" type="time" required className={inputClass} />
+            </div>
+          )}
+          {show("pob") && (
+            <div>
+              <label className="block text-sm font-bold text-brand-brown mb-1">Place of Birth *</label>
+              <input name="pob" required placeholder="City, State" className={inputClass} />
+            </div>
+          )}
         </div>
-        <div>
-          <label className="block text-sm font-bold text-brand-brown mb-1">Time of Birth *</label>
-          <input
-            name="tob"
-            type="time"
-            required
-            className="w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-bold text-brand-brown mb-1">Place of Birth *</label>
-          <input
-            name="pob"
-            required
-            placeholder="City, State"
-            className="w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
-          />
-        </div>
-      </div>
+      )}
 
-      <div>
-        <label className="block text-sm font-bold text-brand-brown mb-1">Your Concern (Optional)</label>
-        <textarea
-          name="message"
-          rows={3}
-          className="w-full px-4 py-3 bg-brand-peach/60 border border-orange-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all resize-none"
-        />
-      </div>
+      {/* Message — conditional */}
+      {show("message") && (
+        <div>
+          <label className="block text-sm font-bold text-brand-brown mb-1">Your Concern (Optional)</label>
+          <textarea name="message" rows={3} className={`${inputClass} resize-none`} />
+        </div>
+      )}
 
       <button
         type="submit"

@@ -22,6 +22,14 @@ export default async function BookServicePage({ params }: { params: Promise<{ se
 
           <div className="bg-white rounded-[2rem] shadow-2xl shadow-brand-orange/5 border border-orange-50 p-8 md:p-10">
             <h1 className="text-3xl md:text-4xl font-black mb-2">{service.title}</h1>
+            {service.category && (
+              <span className="inline-block bg-orange-50 text-brand-orange text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border border-orange-100 mb-3">
+                {service.category}
+              </span>
+            )}
+            {service.description && (
+              <p className="text-brand-brown/70 text-sm leading-relaxed mb-4">{service.description}</p>
+            )}
             <div className="flex items-center gap-4 text-brand-brown/60 font-bold mb-8">
               {service.durationMin && (
                 <span className="flex items-center gap-2 text-sm">
@@ -31,7 +39,10 @@ export default async function BookServicePage({ params }: { params: Promise<{ se
               <span className="text-2xl font-black text-brand-brown">₹{service.price}</span>
             </div>
 
-            <BookingForm service={{ id: service.id, title: service.title, price: service.price }} />
+            <BookingForm
+              service={{ id: service.id, title: service.title, price: service.price }}
+              bookingFields={service.bookingFields as string[]}
+            />
           </div>
         </FadeIn>
       </div>
