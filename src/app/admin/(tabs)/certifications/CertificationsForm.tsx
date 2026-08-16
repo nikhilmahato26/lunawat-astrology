@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react"
 import { RepeatableList } from "@/components/admin/RepeatableList"
-import { TextField, SaveBar } from "@/components/admin/ui"
+import { TextField, SaveBar, ToggleSwitch } from "@/components/admin/ui"
 import { ImageUploader } from "@/components/admin/ImageUploader"
-import { updateCertifications } from "@/actions/settings"
+import { updateCertifications, updateSiteSettings } from "@/actions/settings"
 
 type Certification = {
   id?: string
@@ -14,7 +14,13 @@ type Certification = {
   imageUrl?: string
 }
 
-export function CertificationsForm({ initialCertifications }: { initialCertifications: any[] }) {
+export function CertificationsForm({
+  initialCertifications,
+  initialShowSection,
+}: {
+  initialCertifications: any[]
+  initialShowSection: boolean
+}) {
   const [certs, setCerts] = useState<Certification[]>(
     initialCertifications.map(c => ({
       id: c.id,
@@ -24,26 +30,40 @@ export function CertificationsForm({ initialCertifications }: { initialCertifica
       imageUrl: c.imageUrl || "",
     }))
   )
+  const [showSection, setShowSection] = useState(initialShowSection)
   const [isPending, startTransition] = useTransition()
-  
-  const isDirty = JSON.stringify(certs) !== JSON.stringify(
-    initialCertifications.map(c => ({
-      id: c.id,
-      title: c.title,
-      issuer: c.issuer || "",
-      year: c.year || "",
-      imageUrl: c.imageUrl || "",
-    }))
-  )
+
+  const isDirty =
+    JSON.stringify(certs) !== JSON.stringify(
+      initialCertifications.map(c => ({
+        id: c.id,
+        title: c.title,
+        issuer: c.issuer || "",
+        year: c.year || "",
+        imageUrl: c.imageUrl || "",
+      }))
+    ) || showSection !== initialShowSection
 
   const handleSave = () => {
     startTransition(async () => {
-      await updateCertifications(certs)
+      await Promise.all([
+        updateCertifications(certs),
+        updateSiteSettings({ showCertifications: showSection }),
+      ])
     })
   }
 
   return (
-    <div className="max-w-3xl pb-24">
+    <div className="max-w-3xl pb-24 space-y-6">
+      <div className="bg-zinc-50 border border-zinc-200 rounded-2xl px-6 py-2">
+        <ToggleSwitch
+          label="Show Certifications Section"
+          hint="Turn off to hide this section from the homepage entirely."
+          checked={showSection}
+          onChange={setShowSection}
+        />
+      </div>
+
       <div className="bg-zinc-50 border border-zinc-200 p-6 rounded-2xl">
         <h3 className="font-bold text-lg mb-4">Manage Certifications</h3>
         <RepeatableList
