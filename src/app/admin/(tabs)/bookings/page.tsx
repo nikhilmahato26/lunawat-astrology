@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma"
 import { BookingsList } from "./BookingsList"
 
+// New bookings come from the public booking flow, which has no way to know this page
+// exists or needs revalidating — so it must always hit the database fresh rather than
+// getting statically prerendered at build/deploy time (which would freeze it at whatever
+// bookings existed then).
+export const dynamic = "force-dynamic"
+
 export default async function BookingsTab() {
   const bookings = await prisma.lead.findMany({
     where: { source: "booking" },
