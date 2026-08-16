@@ -1,5 +1,6 @@
 import React from "react"
 import { LucideIcon } from "lucide-react"
+import { TimeInput12h } from "@/components/ui/TimeInput12h"
 
 interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
@@ -51,14 +52,23 @@ export function NumberField({ label, hint, className = "", ...props }: TextField
   )
 }
 
-export function TimeField({ label, hint, className = "", ...props }: TextFieldProps) {
+interface TimeFieldProps {
+  label: string
+  hint?: string
+  className?: string
+  value?: string
+  onChange?: (e: { target: { value: string } }) => void
+  required?: boolean
+}
+
+export function TimeField({ label, hint, className = "", value, onChange, required }: TimeFieldProps) {
   return (
     <div className={`space-y-1 ${className}`}>
       <label className="block text-sm font-medium text-zinc-900">{label}</label>
-      <input
-        type="time"
-        className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-        {...props}
+      <TimeInput12h
+        value={value}
+        required={required}
+        onChange={(next) => onChange?.({ target: { value: next } })}
       />
       {hint && <p className="text-xs text-zinc-500">{hint}</p>}
     </div>

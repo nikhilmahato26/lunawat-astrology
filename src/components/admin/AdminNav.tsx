@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { logoutAction } from "@/actions/auth"
 
 const tabs = [
+  { name: "Bookings", href: "/admin/bookings" },
   { name: "Your Details", href: "/admin/details" },
   { name: "Page Layout", href: "/admin/layout" },
   { name: "Banners", href: "/admin/banners" },

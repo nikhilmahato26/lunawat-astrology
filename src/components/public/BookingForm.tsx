@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { createBooking, verifyBookingPayment } from "@/actions/bookings"
+import { TimeInput12h } from "@/components/ui/TimeInput12h"
 
 declare global {
   interface Window {
@@ -170,7 +171,11 @@ export function BookingForm({ service, bookingFields, categories = [] }: Booking
           {show("tob") && (
             <div>
               <label className="block text-sm font-bold text-brand-brown mb-1">Time of Birth *</label>
-              <input name="tob" type="time" required className={inputClass} />
+              <TimeInput12h
+                name="tob"
+                required
+                className="px-2 py-3 bg-brand-peach/60 border border-brand-orange/15 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition-all"
+              />
             </div>
           )}
           {show("pob") && (
