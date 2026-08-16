@@ -32,10 +32,18 @@ export async function updateServices(services: any[]) {
     throw new Error("Unauthorized")
   }
 
+  // Update existing services in place (preserving their id) instead of wiping and
+  // recreating everything on every save — a full delete+recreate meant every service got
+  // a brand-new id on any save, silently 404-ing any previously loaded "Book Session" link,
+  // bookmark, or un-refreshed browser tab.
+  const existingIds = new Set((await prisma.service.findMany({ select: { id: true } })).map((s) => s.id))
+
   await prisma.$transaction(async (tx) => {
-    await tx.service.deleteMany()
-    await tx.service.createMany({
-      data: services.map((s, i) => ({
+    const keptIds = new Set<string>()
+
+    for (let i = 0; i < services.length; i++) {
+      const s = services[i]
+      const data = {
         title: s.title,
         mode: s.mode,
         price: s.price,
@@ -46,12 +54,25 @@ export async function updateServices(services: any[]) {
         isPopular: s.isPopular,
         isActive: s.isActive ?? true,
         order: i,
-      }))
-    })
+      }
+
+      if (s.id && existingIds.has(s.id)) {
+        await tx.service.update({ where: { id: s.id }, data })
+        keptIds.add(s.id)
+      } else {
+        const created = await tx.service.create({ data })
+        keptIds.add(created.id)
+      }
+    }
+
+    const removedIds = [...existingIds].filter((id) => !keptIds.has(id))
+    if (removedIds.length > 0) {
+      await tx.service.deleteMany({ where: { id: { in: removedIds } } })
+    }
   }, TX_OPTS)
 
   revalidatePath('/', 'layout')
-  
+
   return { success: true }
 }
 
