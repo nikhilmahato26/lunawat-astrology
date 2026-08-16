@@ -91,15 +91,7 @@ export function Footer({
               ))}
             </ul>
 
-            <div className="pt-4">
-              <h4 className="font-bold uppercase tracking-wider text-sm text-brand-orange mb-4">Location</h4>
-              <div className="w-full h-32 bg-white/5 rounded-lg overflow-hidden relative border border-white/10">
-                {/* Embedded Map Placeholder */}
-                <div className="absolute inset-0 flex items-center justify-center text-brand-peach/40 text-xs text-center p-4">
-                  Google Maps Embed<br/>(Set city in admin panel)
-                </div>
-              </div>
-            </div>
+            
           </div>
 
         </div>
