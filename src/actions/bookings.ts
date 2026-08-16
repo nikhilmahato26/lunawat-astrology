@@ -5,12 +5,7 @@ import { getRazorpay } from "@/lib/razorpay"
 import { sendEmail } from "@/lib/email"
 import { z } from "zod"
 import crypto from "crypto"
-
-// Short, human-friendly reference derived from the Lead's own id — unique for free,
-// no extra schema/column needed. e.g. "LAP-8F3K2Q1H"
-function getBookingRef(leadId: string) {
-  return `LAP-${leadId.slice(-8).toUpperCase()}`
-}
+import { getBookingRef } from "@/lib/bookingRef"
 
 function detailsTable(rows: [string, string][]) {
   return `<table cellpadding="0" cellspacing="0">${rows

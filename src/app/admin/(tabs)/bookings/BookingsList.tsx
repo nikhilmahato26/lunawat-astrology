@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Trash2, Mail, Phone, MessageCircle, MapPin, Calendar, Clock, Tag } from "lucide-react"
 import type { Lead } from "@prisma/client"
 import { markLeadRead, deleteLead } from "@/actions/leads"
+import { getBookingRef } from "@/lib/bookingRef"
 
 // Fixed locale + explicit hour12 so this always reads as AM/PM, regardless of the
 // admin's OS/browser locale (see the "Time of Birth" native-input fix — same root cause).
@@ -101,6 +102,9 @@ export function BookingsList({
               </div>
               <div className="flex items-center gap-3">
                 <PaymentBadge status={booking.paymentStatus} />
+                {booking.paymentStatus === "PAID" && (
+                  <span className="font-mono text-xs font-bold text-brand-orange">{getBookingRef(booking.id)}</span>
+                )}
                 {booking.amount != null && <span className="text-sm font-bold">₹{booking.amount}</span>}
                 <span className="text-xs text-zinc-400">{dateFormatter.format(booking.createdAt)}</span>
               </div>
