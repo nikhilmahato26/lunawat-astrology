@@ -5,9 +5,9 @@ import { FadeIn } from "@/components/public/FadeIn"
 export default async function BookingSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ bookingId?: string }>
+  searchParams: Promise<{ bookingId?: string; hasEmail?: string }>
 }) {
-  const { bookingId } = await searchParams
+  const { bookingId, hasEmail } = await searchParams
 
   return (
     <div className="bg-gradient-to-b from-brand-peach to-[#FCF6EC] min-h-screen text-brand-brown font-sans flex items-center justify-center px-4">
@@ -26,9 +26,11 @@ export default async function BookingSuccessPage({
               <span className="font-mono font-bold text-brand-orange">{bookingId}</span>
             </div>
           )}
-          <p className="text-xs text-brand-brown/50 mb-6">
-            A confirmation email is on its way — if it doesn&apos;t show up in a few minutes, please check your Spam/Junk folder too.
-          </p>
+          {hasEmail === "1" && (
+            <p className="text-xs text-brand-brown/50 mb-6">
+              A confirmation email is on its way — if it doesn&apos;t show up in a few minutes, please check your Spam/Junk folder too.
+            </p>
+          )}
           <Link
             href="/"
             className="inline-flex items-center justify-center h-14 px-8 bg-brand-orange text-white font-bold rounded-xl hover:bg-gold-600 transition-colors"

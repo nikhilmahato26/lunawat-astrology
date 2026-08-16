@@ -102,7 +102,11 @@ export function BookingForm({ service, bookingFields, categories = [] }: Booking
               razorpay_signature: response.razorpay_signature,
             })
             if (verify.success) {
-              router.push(`/book/success${verify.bookingId ? `?bookingId=${encodeURIComponent(verify.bookingId)}` : ""}`)
+              const params = new URLSearchParams()
+              if (verify.bookingId) params.set("bookingId", verify.bookingId)
+              if (result.email) params.set("hasEmail", "1")
+              const query = params.toString()
+              router.push(`/book/success${query ? `?${query}` : ""}`)
             } else {
               setError(verify.error || "Payment verification failed. Please contact us to confirm your booking.")
             }

@@ -1,6 +1,6 @@
 'use server'
 
-import nodemailer from "nodemailer"
+import { sendEmail } from "@/lib/email"
 
 export async function submitContactForm(formData: FormData) {
   try {
@@ -13,29 +13,19 @@ export async function submitContactForm(formData: FormData) {
       return { error: "Please fill in all required fields." }
     }
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD,
-      },
-    })
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: "drrahuljain143@gmail.com",
+    await sendEmail({
+      to: process.env.LEAD_NOTIFY_TO || "drrahuljainastrology@gmail.com",
       subject: `New Contact Request from ${name}`,
-      text: `
-        Name: ${name}
-        Email: ${email}
-        Phone: ${phone || 'Not provided'}
-        
-        Message:
-        ${message}
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+          <h2 style="margin-bottom:4px;">New contact form submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
+          <p><strong>Message:</strong><br/>${message}</p>
+        </div>
       `,
-    }
-
-    await transporter.sendMail(mailOptions)
+    })
 
     return { success: true }
   } catch (error) {
