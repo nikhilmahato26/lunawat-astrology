@@ -44,12 +44,18 @@ export function BookingsList({
   bookings: Lead[]
   serviceTitles: Record<string, string>
 }) {
-  const [filter, setFilter] = useState<"all" | "unread">("all")
+  const [filter, setFilter] = useState<"all" | "unread" | "pending" | "paid">("all")
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
-  const visible = filter === "unread" ? bookings.filter((b) => !b.isRead) : bookings
-  const unreadCount = bookings.filter((b) => !b.isRead).length
+  const filters = {
+    all: bookings,
+    unread: bookings.filter((b) => !b.isRead),
+    pending: bookings.filter((b) => b.paymentStatus === "PENDING"),
+    paid: bookings.filter((b) => b.paymentStatus === "PAID"),
+  } as const
+
+  const visible = filters[filter]
 
   const toggleRead = (id: string, isRead: boolean) => {
     startTransition(async () => {
@@ -73,17 +79,21 @@ export function BookingsList({
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
-        {(["all", "unread"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filter === f ? "bg-black text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-            }`}
-          >
-            {f === "all" ? "All" : `Unread${unreadCount ? ` (${unreadCount})` : ""}`}
-          </button>
-        ))}
+        {(["all", "unread", "pending", "paid"] as const).map((f) => {
+          const count = filters[f].length
+          const label = f === "all" ? "All" : f[0].toUpperCase() + f.slice(1)
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                filter === f ? "bg-black text-white" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+              }`}
+            >
+              {f === "all" ? label : `${label} (${count})`}
+            </button>
+          )
+        })}
       </div>
 
       <div className="space-y-3">
