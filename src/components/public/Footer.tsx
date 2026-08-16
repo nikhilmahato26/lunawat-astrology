@@ -85,9 +85,8 @@ export function Footer({
 
         </div>
 
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-brand-peach/40">
+        <div className="border-t border-white/10 pt-8 text-center text-xs text-brand-peach/40">
           <p>© {new Date().getFullYear()} {businessName}. All rights reserved.</p>
-          <a href="/admin" className="hover:text-brand-peach/80 transition-colors mt-4 md:mt-0">Admin Login</a>
         </div>
       </div>
     </footer>

@@ -63,6 +63,16 @@ model SiteSettings {
   showFaq           Boolean @default(true)
   showCta           Boolean @default(true)
   showContact       Boolean @default(true)
+  showBanners       Boolean @default(true)
+  showMedia         Boolean @default(true)
+
+  // Order of the reorderable middle sections (between the fixed Hero and Contact/Footer).
+  // Keys: stats | whyChoose | about | services | certifications | banners | testimonials | media | faq | cta
+  sectionOrder String[] @default(["stats", "whyChoose", "about", "services", "certifications", "banners", "testimonials", "media", "faq", "cta"])
+
+  // How the auto-computed discount badge on pricing cards displays, derived from each
+  // Service's price vs originalPrice — "FLAT" shows "₹X OFF", "PERCENT" shows "X% OFF".
+  discountBadgeFormat String @default("PERCENT")
 
   // SEO
   metaTitle       String?
@@ -85,16 +95,13 @@ model Service {          // Consultations
   price         Int
   originalPrice Int?
   durationMin   Int?
+  durationUnit  String   @default("MIN")  // MIN | HR — durationMin holds the raw number in this unit
   description   String?  @db.Text
   isPopular     Boolean  @default(false)
   isActive      Boolean  @default(true)
   order         Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now()) @updatedAt
-
-  // Offer (shown in the dedicated Offers section, without leaving Services)
-  offerType     String?  // "FLAT" | "PERCENT"
-  offerValue    Int?     // rupees off if FLAT, percent off (0-100) if PERCENT
 }
 
 model Stat {

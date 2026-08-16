@@ -1,30 +1,20 @@
-type OfferService = {
+type DiscountService = {
   price: number
-  offerType: string | null
-  offerValue: number | null
+  originalPrice: number | null
 }
 
-// Single source of truth for turning a service's offer fields into an actual discounted
-// price. Used both for display (Offers section, booking page) and for the real amount
-// charged/saved on booking, so an advertised discount is never just cosmetic.
-export function getOfferPrice(service: OfferService): number | null {
-  if (!service.offerType || service.offerValue == null || service.offerValue <= 0) return null
+export type DiscountBadgeFormat = "FLAT" | "PERCENT"
 
-  if (service.offerType === "FLAT") {
-    return Math.max(0, service.price - service.offerValue)
+// Discount badge is derived entirely from the service's own price vs originalPrice — no
+// separate offer fields to keep in sync. `format` controls how it's displayed; the admin
+// picks that globally, the underlying numbers are always computed the same way.
+export function getDiscountLabel(service: DiscountService, format: DiscountBadgeFormat): string | null {
+  if (service.originalPrice == null || service.originalPrice <= service.price) return null
+
+  if (format === "FLAT") {
+    return `₹${service.originalPrice - service.price} OFF`
   }
 
-  if (service.offerType === "PERCENT") {
-    const pct = Math.min(100, Math.max(0, service.offerValue))
-    return Math.round(service.price * (1 - pct / 100))
-  }
-
-  return null
-}
-
-export function getOfferLabel(service: OfferService): string | null {
-  if (!service.offerType || service.offerValue == null || service.offerValue <= 0) return null
-  if (service.offerType === "FLAT") return `₹${service.offerValue} OFF`
-  if (service.offerType === "PERCENT") return `${service.offerValue}% OFF`
-  return null
+  const pct = Math.round((1 - service.price / service.originalPrice) * 100)
+  return `${pct}% OFF`
 }

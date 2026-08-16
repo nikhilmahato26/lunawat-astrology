@@ -4,21 +4,20 @@ import Link from "next/link"
 import { ArrowLeft, Clock, Sparkles } from "lucide-react"
 import { FadeIn } from "@/components/public/FadeIn"
 import { BookingForm } from "@/components/public/BookingForm"
-import { getOfferPrice, getOfferLabel } from "@/lib/pricing"
+import { getDiscountLabel, type DiscountBadgeFormat } from "@/lib/pricing"
+import { formatDuration } from "@/lib/duration"
 
 export default async function BookServicePage({ params }: { params: Promise<{ serviceId: string }> }) {
   const { serviceId } = await params
 
   const [service, settings] = await Promise.all([
     prisma.service.findUnique({ where: { id: serviceId } }),
-    prisma.siteSettings.findUnique({ where: { id: "singleton" }, select: { bookingFields: true, consultationCategories: true } }),
+    prisma.siteSettings.findUnique({ where: { id: "singleton" }, select: { bookingFields: true, consultationCategories: true, discountBadgeFormat: true } }),
   ])
 
   if (!service || !service.isActive) notFound()
 
-  const discountedPrice = getOfferPrice(service)
-  const offerLabel = getOfferLabel(service)
-  const effectivePrice = discountedPrice ?? service.price
+  const discountLabel = getDiscountLabel(service, (settings?.discountBadgeFormat as DiscountBadgeFormat) || "PERCENT")
 
   return (
     <div className="bg-gradient-to-b from-brand-peach to-[#FCF6EC] min-h-screen text-brand-brown font-sans">
@@ -36,22 +35,24 @@ export default async function BookServicePage({ params }: { params: Promise<{ se
             <div className="flex items-center gap-4 text-brand-brown/60 font-bold mb-8 flex-wrap">
               {service.durationMin && (
                 <span className="flex items-center gap-2 text-sm">
-                  <Clock size={16} className="text-brand-orange" /> {service.durationMin} mins
+                  <Clock size={16} className="text-brand-orange" /> {formatDuration(service.durationMin, service.durationUnit)}
                 </span>
               )}
-              <span className="text-2xl font-black text-brand-brown">₹{effectivePrice}</span>
-              {discountedPrice !== null && (
+              <span className="text-2xl font-black text-brand-brown">₹{service.price}</span>
+              {service.originalPrice != null && service.originalPrice > service.price && (
                 <>
-                  <span className="text-lg line-through text-brand-brown/40">₹{service.price}</span>
-                  <span className="inline-flex items-center gap-1 bg-brand-teal text-brand-peach px-3 py-1 rounded-full text-xs font-bold">
-                    <Sparkles size={12} /> {offerLabel}
-                  </span>
+                  <span className="text-lg line-through text-brand-brown/40">₹{service.originalPrice}</span>
+                  {discountLabel && (
+                    <span className="inline-flex items-center gap-1 bg-brand-teal text-brand-peach px-3 py-1 rounded-full text-xs font-bold">
+                      <Sparkles size={12} /> {discountLabel}
+                    </span>
+                  )}
                 </>
               )}
             </div>
 
             <BookingForm
-              service={{ id: service.id, title: service.title, price: effectivePrice }}
+              service={{ id: service.id, title: service.title, price: service.price }}
               bookingFields={settings?.bookingFields}
               categories={settings?.consultationCategories ?? []}
             />

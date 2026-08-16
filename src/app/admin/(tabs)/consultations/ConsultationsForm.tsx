@@ -24,30 +24,34 @@ export function ConsultationsForm({
   enablePaymentGateway: initialEnablePaymentGateway,
   initialBookingFields,
   initialCategories,
+  initialDiscountBadgeFormat,
 }: {
   initialServices: Service[]
   enablePaymentGateway: boolean
   initialBookingFields: string[]
   initialCategories: string[]
+  initialDiscountBadgeFormat: string
 }) {
   const [services, setServices] = useState<Service[]>(initialServices)
   const [enablePaymentGateway, setEnablePaymentGateway] = useState(initialEnablePaymentGateway)
   const [bookingFields, setBookingFields] = useState<string[]>(initialBookingFields)
   const [categories, setCategories] = useState<string[]>(initialCategories)
   const [newCategory, setNewCategory] = useState("")
+  const [discountBadgeFormat, setDiscountBadgeFormat] = useState(initialDiscountBadgeFormat)
   const [isPending, startTransition] = useTransition()
 
   const isDirty =
     JSON.stringify(services) !== JSON.stringify(initialServices) ||
     enablePaymentGateway !== initialEnablePaymentGateway ||
     JSON.stringify(bookingFields) !== JSON.stringify(initialBookingFields) ||
-    JSON.stringify(categories) !== JSON.stringify(initialCategories)
+    JSON.stringify(categories) !== JSON.stringify(initialCategories) ||
+    discountBadgeFormat !== initialDiscountBadgeFormat
 
   const handleSave = () => {
     startTransition(async () => {
       await Promise.all([
         updateServices(services),
-        updateSiteSettings({ enablePaymentGateway, bookingFields, consultationCategories: categories }),
+        updateSiteSettings({ enablePaymentGateway, bookingFields, consultationCategories: categories, discountBadgeFormat }),
       ])
     })
   }
@@ -126,14 +130,27 @@ export function ConsultationsForm({
                 originalPrice: e.target.value ? Number(e.target.value) : null,
               })
             }
-            hint="Optional strike-through"
+            hint="Optional strike-through — also drives the auto discount badge"
           />
-          <TextField
-            label="Duration (mins)"
-            type="number"
-            value={service.durationMin ?? ""}
-            onChange={(e) => updateItem(index, { ...service, durationMin: Number(e.target.value) })}
-          />
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-zinc-900">Duration</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={service.durationMin ?? ""}
+                onChange={(e) => updateItem(index, { ...service, durationMin: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              />
+              <select
+                value={service.durationUnit}
+                onChange={(e) => updateItem(index, { ...service, durationUnit: e.target.value })}
+                className={`${selectClass} w-24 shrink-0`}
+              >
+                <option value="MIN">mins</option>
+                <option value="HR">hr</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* ── Description ── */}
@@ -151,52 +168,6 @@ export function ConsultationsForm({
           checked={service.isPopular}
           onChange={(checked) => updateItem(index, { ...service, isPopular: checked })}
         />
-
-        {/* ── Offer ── */}
-        <div className="space-y-1 border border-zinc-200 rounded-lg p-4 bg-zinc-50">
-          <label className="block text-sm font-medium text-zinc-900 mb-2">
-            Offer
-            <span className="ml-2 text-xs text-zinc-400 font-normal">
-              (shows in the Offers section, stays here too)
-            </span>
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            <select
-              value={service.offerType ?? ""}
-              onChange={(e) => {
-                const value = e.target.value || null
-                updateItem(index, {
-                  ...service,
-                  offerType: value,
-                  offerValue: value ? (service.offerValue ?? 10) : null,
-                })
-              }}
-              className={selectClass}
-            >
-              <option value="">No offer</option>
-              <option value="FLAT">Flat amount off (₹)</option>
-              <option value="PERCENT">Percent off (%)</option>
-            </select>
-            {service.offerType && (
-              <TextField
-                label=""
-                type="number"
-                min={0}
-                max={service.offerType === "PERCENT" ? 100 : undefined}
-                value={service.offerValue ?? ""}
-                onChange={(e) => updateItem(index, { ...service, offerValue: e.target.value ? Number(e.target.value) : null })}
-              />
-            )}
-          </div>
-          {service.offerType && service.offerValue ? (
-            <p className="text-xs text-zinc-500 mt-1">
-              Discounted price: ₹
-              {service.offerType === "FLAT"
-                ? Math.max(0, service.price - service.offerValue)
-                : Math.round(service.price * (1 - Math.min(100, service.offerValue) / 100))}
-            </p>
-          ) : null}
-        </div>
       </div>
     )
   }
@@ -218,6 +189,23 @@ export function ConsultationsForm({
             checked={enablePaymentGateway}
             onChange={setEnablePaymentGateway}
           />
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-zinc-900">
+            Discount Badge Format
+            <span className="ml-2 text-xs text-zinc-400 font-normal">
+              (any service with an Original Price gets an auto-computed badge — pick how it reads)
+            </span>
+          </label>
+          <select
+            value={discountBadgeFormat}
+            onChange={(e) => setDiscountBadgeFormat(e.target.value)}
+            className={selectClass}
+          >
+            <option value="PERCENT">Percent off — e.g. 20% OFF</option>
+            <option value="FLAT">Flat amount off — e.g. ₹400 OFF</option>
+          </select>
         </div>
 
         <div className="space-y-2">
@@ -317,14 +305,13 @@ export function ConsultationsForm({
               price: 500,
               originalPrice: null,
               durationMin: 30,
+              durationUnit: "MIN",
               description: null,
               isPopular: false,
               isActive: true,
               order: 0,
               createdAt: new Date(),
               updatedAt: new Date(),
-              offerType: null,
-              offerValue: null,
             } as Service)
           }
         />

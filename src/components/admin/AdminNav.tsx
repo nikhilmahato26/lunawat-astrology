@@ -6,10 +6,12 @@ import { logoutAction } from "@/actions/auth"
 
 const tabs = [
   { name: "Your Details", href: "/admin/details" },
+  { name: "Page Layout", href: "/admin/layout" },
   { name: "Banners", href: "/admin/banners" },
   { name: "Consultations", href: "/admin/consultations" },
   { name: "About, Trust & FAQ", href: "/admin/about" },
   { name: "Certifications", href: "/admin/certifications" },
+  { name: "Testimonials", href: "/admin/testimonials" },
   { name: "Media & Gallery", href: "/admin/media" },
   { name: "Contact & Hours", href: "/admin/contact" },
 ]

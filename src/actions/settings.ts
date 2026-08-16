@@ -41,12 +41,11 @@ export async function updateServices(services: any[]) {
         price: s.price,
         originalPrice: s.originalPrice,
         durationMin: s.durationMin,
+        durationUnit: s.durationUnit || "MIN",
         description: s.description || null,
         isPopular: s.isPopular,
         isActive: s.isActive ?? true,
         order: i,
-        offerType: s.offerType || null,
-        offerValue: s.offerType ? s.offerValue : null,
       }))
     })
   }, TX_OPTS)
@@ -216,6 +215,40 @@ export async function updateCertifications(certifications: { title: string, issu
       }))
     })
   }
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}
+
+export async function updateTestimonials(testimonials: {
+  name: string
+  location?: string
+  rating: number
+  message: string
+  imageUrl?: string
+  isActive?: boolean
+}[]) {
+  const session = await auth()
+  if (!session?.user) throw new Error("Unauthorized")
+
+  const valid = testimonials.filter((t) => t.name && t.message)
+
+  await prisma.$transaction(async (tx) => {
+    await tx.testimonial.deleteMany()
+    if (valid.length > 0) {
+      await tx.testimonial.createMany({
+        data: valid.map((t, i) => ({
+          name: t.name,
+          location: t.location || null,
+          rating: Math.min(5, Math.max(1, t.rating || 5)),
+          message: t.message,
+          imageUrl: t.imageUrl || null,
+          isActive: t.isActive ?? true,
+          order: i,
+        }))
+      })
+    }
+  }, TX_OPTS)
 
   revalidatePath('/', 'layout')
   return { success: true }

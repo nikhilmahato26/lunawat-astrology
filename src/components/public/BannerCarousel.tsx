@@ -11,8 +11,14 @@ interface BannerItem {
   linkUrl: string | null
 }
 
+// Fallback ratio used only until the active banner's real image has loaded and reported
+// its natural size — after that the container snaps to the image's true aspect ratio
+// instead of a fixed box that would crop it.
+const FALLBACK_RATIO = 21 / 9
+
 export function BannerCarousel({ banners }: { banners: BannerItem[] }) {
   const [index, setIndex] = useState(0)
+  const [ratios, setRatios] = useState<Record<string, number>>({})
 
   useEffect(() => {
     if (banners.length < 2) return
@@ -26,8 +32,13 @@ export function BannerCarousel({ banners }: { banners: BannerItem[] }) {
 
   const goTo = (i: number) => setIndex((i + banners.length) % banners.length)
 
+  const activeRatio = ratios[banners[index].id] ?? FALLBACK_RATIO
+
   return (
-    <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-[2rem] overflow-hidden shadow-2xl shadow-brand-orange/10">
+    <div
+      className="relative w-full rounded-[2rem] overflow-hidden shadow-2xl shadow-brand-orange/10 transition-[aspect-ratio] duration-300"
+      style={{ aspectRatio: activeRatio }}
+    >
       {banners.map((banner, i) => {
         const content = (
           <>
@@ -35,7 +46,14 @@ export function BannerCarousel({ banners }: { banners: BannerItem[] }) {
             <img
               src={banner.imageUrl}
               alt={banner.title || "Banner"}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
+              onLoad={(e) => {
+                const { naturalWidth, naturalHeight } = e.currentTarget
+                if (!naturalWidth || !naturalHeight) return
+                setRatios((prev) =>
+                  prev[banner.id] ? prev : { ...prev, [banner.id]: naturalWidth / naturalHeight }
+                )
+              }}
             />
             {(banner.title || banner.subtitle) && (
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex flex-col justify-end p-6 md:p-12">

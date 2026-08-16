@@ -16,6 +16,7 @@ export default async function ConsultationsTab() {
         enablePaymentGateway={settings?.enablePaymentGateway ?? false}
         initialBookingFields={settings?.bookingFields ?? ALL_BOOKING_FIELDS}
         initialCategories={settings?.consultationCategories ?? []}
+        initialDiscountBadgeFormat={settings?.discountBadgeFormat ?? "PERCENT"}
       />
     </div>
   )

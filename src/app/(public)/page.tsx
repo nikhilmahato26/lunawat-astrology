@@ -11,7 +11,10 @@ import { LiteYouTube } from "@/components/public/LiteYouTube"
 import { GalleryGrid } from "@/components/public/GalleryGrid"
 import { BannerCarousel } from "@/components/public/BannerCarousel"
 import { CelestialBg } from "@/components/public/CelestialBg"
-import { getOfferPrice, getOfferLabel } from "@/lib/pricing"
+import { getDiscountLabel, type DiscountBadgeFormat } from "@/lib/pricing"
+import { formatDuration } from "@/lib/duration"
+import { reconcileSectionOrder, type SectionKey } from "@/lib/sections"
+import { Fragment, type ReactNode } from "react"
 
 const getSettings = unstable_cache(
   async () => prisma.siteSettings.findUnique({ where: { id: "singleton" } }),
@@ -55,6 +58,12 @@ const getBanners = unstable_cache(
   { tags: ['site-data'] }
 )
 
+const getTestimonials = unstable_cache(
+  async () => prisma.testimonial.findMany({ where: { isActive: true }, orderBy: { order: 'asc' } }),
+  ['testimonials'],
+  { tags: ['site-data'] }
+)
+
 export default async function HomePage() {
   const settings = await getSettings()
   const services = await getServices()
@@ -63,16 +72,419 @@ export default async function HomePage() {
   const gallery = await getGallery()
   const videos = await getVideos()
   const banners = await getBanners()
+  const testimonials = await getTestimonials()
 
   if (!settings) return null
 
   // Helper for whatsapp link
   const waLink = `https://wa.me/${settings.whatsapp?.replace(/[^0-9]/g, '')}`
 
+  const sectionOrder = reconcileSectionOrder(settings.sectionOrder ?? [])
+  const sectionVisible: Record<SectionKey, boolean> = {
+    stats: settings.showStats,
+    whyChoose: settings.showWhyChoose,
+    about: settings.showAbout,
+    services: settings.showServices,
+    certifications: settings.showCertifications,
+    banners: settings.showBanners,
+    testimonials: settings.showTestimonials,
+    media: settings.showMedia,
+    faq: settings.showFaq,
+    cta: settings.showCta,
+  }
+
+  const discountBadgeFormat = (settings.discountBadgeFormat as DiscountBadgeFormat) || "PERCENT"
+
+  // ── Each reorderable middle section, as a standalone node ──
+  const statsSection: ReactNode = (
+    <section className="py-16 bg-brand-cream border-y border-brand-orange/15 relative">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 relative z-10">
+        <div className="flex flex-col md:flex-row justify-center items-center gap-16 md:gap-32">
+          <FadeIn delay={0.1}>
+            <div className="text-center">
+              <Users size={32} className="mx-auto text-brand-orange mb-4 opacity-80" />
+              <div className="text-4xl md:text-5xl font-black mb-2 text-brand-brown">
+                {stats.find(s => s.label.toLowerCase().includes('client'))?.value || '1,000+'}
+              </div>
+              <div className="text-sm font-bold text-brand-brown/60 uppercase tracking-widest">
+                Happy Clients
+              </div>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.2}>
+            <div className="text-center">
+              <Calendar size={32} className="mx-auto text-brand-orange mb-4 opacity-80" />
+              <div className="text-4xl md:text-5xl font-black mb-2 text-brand-brown">
+                {stats.find(s => s.label.toLowerCase().includes('consultation'))?.value || '2,000+'}
+              </div>
+              <div className="text-sm font-bold text-brand-brown/60 uppercase tracking-widest">
+                Consultations Done
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </section>
+  )
+
+  const whyChooseSection: ReactNode = (
+    <section className="py-24 bg-white/50">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8">
+        <FadeIn className="text-center mb-16">
+          <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Why Choose Me</h3>
+          <h2 className="font-serif text-4xl font-bold text-brand-brown">Guidance You Can Trust</h2>
+          <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
+        </FadeIn>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { icon: ShieldCheck, title: "100% Confidential", desc: "Your privacy is our utmost priority in every session." },
+            { icon: Heart, title: "Honest Predictions", desc: "No sugarcoating, just the truth and actionable remedies." },
+            { icon: CheckCircle2, title: "Proven Remedies", desc: "Simple, effective, and practical astrological solutions." }
+          ].map((item, i) => (
+            <FadeIn key={i} delay={i * 0.1}>
+              <div className="bg-white p-8 rounded-3xl shadow-xl shadow-brand-brown/5 border border-brand-orange/10 h-full flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-brand-cream rounded-2xl flex items-center justify-center text-brand-orange mb-6">
+                  <item.icon size={32} />
+                </div>
+                <h3 className="font-serif text-xl font-bold mb-3">{item.title}</h3>
+                <p className="text-brand-brown/70 leading-relaxed">{item.desc}</p>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+
+  const aboutSection: ReactNode = (
+    <section id="about" className="relative py-24 bg-brand-peach overflow-hidden scroll-mt-20">
+      <CelestialBg tone="light" className="absolute -bottom-40 -left-40 w-[480px] h-[480px] opacity-60" />
+      <div className="relative max-w-6xl mx-auto px-4 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <FadeIn className="space-y-6">
+            <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase">About The Astrologer</h3>
+            <h2 className="font-serif text-4xl md:text-5xl font-bold text-brand-brown leading-tight">
+              {settings.aboutTitle || "Guiding Lives with Vedic Wisdom"}
+            </h2>
+            <div className="w-16 h-1 bg-brand-orange rounded-full" />
+            <div className="prose prose-lg text-brand-brown/80">
+              {settings.aboutBody?.split('\n').map((paragraph: string, i: number) => (
+                <p key={i}>{paragraph}</p>
+              ))}
+            </div>
+            <a href="#services" className="inline-flex items-center text-brand-orange font-bold hover:gap-3 transition-all gap-2 mt-4">
+              Explore Services <ArrowRight size={20} />
+            </a>
+          </FadeIn>
+
+          <FadeIn direction="up">
+            <div className="relative">
+              <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl">
+                {settings.aboutImageUrl ? (
+                  <img src={settings.aboutImageUrl} alt="About" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-brand-cream flex items-center justify-center border-4 border-white">
+                    <div className="text-brand-brown/30 text-center font-bold text-xl">Image Placeholder</div>
+                  </div>
+                )}
+              </div>
+              {/* Decorative element */}
+              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-teal rounded-full flex items-center justify-center text-brand-peach">
+                  <Award size={24} />
+                </div>
+                <div>
+                  <div className="font-serif font-bold text-xl">10+ Years</div>
+                  <div className="text-sm font-bold text-brand-brown/60 uppercase">Experience</div>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </div>
+    </section>
+  )
+
+  const servicesSection: ReactNode = (
+    <section id="services" className="bg-white scroll-mt-20">
+      {/* Celestial pricing header band */}
+      <div className="relative overflow-hidden bg-brand-brown">
+        <CelestialBg tone="dark" className="absolute left-0 top-1/2 -translate-y-1/2 w-[420px] h-[420px] opacity-40" />
+        <CelestialBg tone="dark" className="absolute right-0 top-1/2 -translate-y-1/2 w-[420px] h-[420px] opacity-40" />
+
+        <FadeIn className="relative text-center py-20 px-4">
+          <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Consultations</h3>
+          <h2 className="font-serif text-5xl md:text-6xl font-bold text-brand-peach">Pricing</h2>
+          <a href="#contact" className="inline-block mt-8 px-8 py-3 rounded-full bg-brand-orange text-white font-bold text-sm uppercase tracking-wider hover:bg-gold-600 transition-colors shadow-lg shadow-brand-orange/20">
+            Contact Us
+          </a>
+        </FadeIn>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-16 pb-24 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
+          {services.map((service: (typeof services)[number], i: number) => {
+            const discountLabel = getDiscountLabel(service, discountBadgeFormat)
+            return (
+            <FadeIn key={service.id} delay={i * 0.1}>
+              <div
+                className={`relative flex flex-col p-8 rounded-[2rem] h-full transition-transform hover:-translate-y-1 ${
+                  service.isPopular
+                    ? 'bg-white border border-brand-orange/15 shadow-2xl shadow-brand-brown/15 lg:scale-105 z-10'
+                    : 'bg-brand-brown border border-white/10 shadow-xl shadow-brand-brown/20 text-brand-peach'
+                }`}
+              >
+                {service.isPopular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand-orange text-white px-6 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
+                    Most Popular
+                  </div>
+                )}
+                {discountLabel && (
+                  <div className="absolute -top-3 -right-3 bg-brand-teal text-brand-peach px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1">
+                    <Sparkles size={12} /> {discountLabel}
+                  </div>
+                )}
+
+                <h3 className={`font-serif text-2xl font-bold mb-3 ${service.isPopular ? 'text-brand-brown' : 'text-brand-peach'}`}>{service.title}</h3>
+                <div className={`text-sm font-medium mb-4 flex items-center gap-2 ${service.isPopular ? 'text-brand-brown/60' : 'text-brand-peach/60'}`}>
+                  <Clock size={16} className="text-brand-orange" />
+                  {formatDuration(service.durationMin, service.durationUnit)} · <span className="capitalize">{service.mode.replace(/_/g, ' ').toLowerCase()}</span>
+                </div>
+
+                {service.description && (
+                  <p className={`text-sm mb-6 leading-relaxed line-clamp-3 ${service.isPopular ? 'text-brand-brown/70' : 'text-brand-peach/70'}`}>
+                    {service.description}
+                  </p>
+                )}
+
+                <div className="mb-8">
+                  <div className="flex items-end gap-3">
+                    <span className={`font-serif text-5xl font-bold ${service.isPopular ? 'text-brand-orange' : 'text-brand-peach'}`}>₹{service.price}</span>
+                    {service.originalPrice && (
+                      <span className={`text-xl line-through font-bold mb-1 ${service.isPopular ? 'text-brand-brown/40' : 'text-brand-peach/40'}`}>₹{service.originalPrice}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-6">
+                  <a
+                    href={`/book/${service.id}`}
+                    className={`w-full flex items-center justify-center h-14 rounded-xl font-bold transition-all ${
+                      service.isPopular
+                        ? 'bg-brand-orange text-white hover:bg-gold-600 shadow-lg shadow-brand-orange/20'
+                        : 'border-2 border-brand-orange/40 text-brand-peach hover:bg-brand-orange hover:border-brand-orange hover:text-white'
+                    }`}
+                  >
+                    Book Session
+                  </a>
+                </div>
+              </div>
+            </FadeIn>
+            )
+          })}
+
+        </div>
+      </div>
+    </section>
+  )
+
+  const certificationsSection: ReactNode = certifications.length === 0 ? null : (
+    <section className="py-24 bg-brand-cream">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 text-center">
+        <FadeIn>
+          <GraduationCap size={48} className="mx-auto text-brand-orange mb-6" />
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-brand-brown mb-12">Certified & Recognized</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+             {certifications.map((cert: (typeof certifications)[number], i: number) => (
+               <FadeIn key={cert.id} delay={i * 0.1}>
+                 <div className="bg-white rounded-[2rem] overflow-hidden shadow-lg shadow-brand-brown/5 border border-brand-orange/10 h-full flex flex-col hover:-translate-y-1 transition-transform">
+                   {cert.imageUrl ? (
+                     <div className="aspect-[4/3] w-full bg-brand-cream relative">
+                       {/* eslint-disable-next-line @next/next/no-img-element */}
+                       <img src={cert.imageUrl} alt={cert.title} className="object-cover w-full h-full" />
+                     </div>
+                   ) : (
+                     <div className="aspect-[4/3] w-full bg-brand-cream flex items-center justify-center text-brand-orange/20">
+                       <Award size={64} />
+                     </div>
+                   )}
+                   <div className="p-6 flex flex-col items-center text-center flex-1">
+                     <h3 className="font-serif font-bold text-lg text-brand-brown mb-2">{cert.title}</h3>
+                     {(cert.issuer || cert.year) && (
+                       <div className="text-sm text-brand-brown/60 font-medium mt-auto">
+                         {cert.issuer} {cert.year && `(${cert.year})`}
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               </FadeIn>
+             ))}
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  )
+
+  const bannersSection: ReactNode = banners.length === 0 ? null : (
+    <section className="px-4 md:px-8 py-16">
+      <div className="max-w-6xl mx-auto">
+        <FadeIn>
+          <BannerCarousel banners={banners} />
+        </FadeIn>
+      </div>
+    </section>
+  )
+
+  const testimonialsSection: ReactNode = testimonials.length === 0 ? null : (
+    <section className="py-24 bg-white overflow-hidden">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8">
+        <FadeIn className="text-center mb-16">
+           <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Testimonials</h3>
+           <h2 className="font-serif text-4xl font-bold text-brand-brown">What Clients Say</h2>
+           <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
+        </FadeIn>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {testimonials.map((t: (typeof testimonials)[number], i: number) => (
+            <FadeIn key={t.id} delay={i * 0.1}>
+              <div className="bg-brand-peach p-8 rounded-3xl relative h-full flex flex-col">
+                <Quote size={40} className="absolute top-6 right-6 text-brand-orange/20" />
+                <div className="flex gap-1 mb-4 text-brand-orange">
+                  {Array.from({ length: 5 }).map((_, s) => (
+                    <Star key={s} size={16} className={s < t.rating ? "fill-current" : "text-brand-orange/20"} />
+                  ))}
+                </div>
+                <p className="text-brand-brown font-medium italic leading-relaxed mb-6 flex-1">
+                  &ldquo;{t.message}&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  {t.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={t.imageUrl} alt={t.name} className="w-10 h-10 rounded-full object-cover" />
+                  )}
+                  <div>
+                    <div className="font-serif font-bold">{t.name}</div>
+                    {t.location && <div className="text-xs text-brand-brown/50">{t.location}</div>}
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+
+  const mediaSection: ReactNode = (gallery.length === 0 && videos.length === 0) ? null : (
+    <section className="py-24 bg-brand-peach">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8">
+        <FadeIn className="text-center mb-16">
+          <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Media</h3>
+          <h2 className="font-serif text-4xl font-bold text-brand-brown">Gallery & Videos</h2>
+          <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
+        </FadeIn>
+
+        <div className="space-y-20">
+          {videos.length > 0 && (
+            <div>
+              <h3 className="font-serif text-2xl font-bold text-brand-brown mb-8 text-center md:text-left">Videos</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {videos.map((vid: (typeof videos)[number], i: number) => (
+                  <FadeIn key={vid.id} delay={i * 0.1}>
+                    <div className="rounded-3xl overflow-hidden shadow-xl shadow-brand-brown/5">
+                      <LiteYouTube videoId={vid.videoId} title={vid.title || "YouTube Video"} />
+                    </div>
+                  </FadeIn>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {gallery.length > 0 && (
+            <div>
+              <h3 className="font-serif text-2xl font-bold text-brand-brown mb-8 text-center md:text-left">Gallery</h3>
+              <GalleryGrid gallery={gallery} />
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+
+  const faqSection: ReactNode = (
+    <section className="py-24 bg-white">
+      <div className="max-w-3xl mx-auto px-4 lg:px-8">
+        <FadeIn className="mb-16">
+          <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">FAQ</h3>
+          <h2 className="font-serif text-4xl md:text-5xl font-bold text-brand-brown">Frequently Asked</h2>
+        </FadeIn>
+
+        <div className="space-y-3">
+          {[
+            { q: "What details are required for a consultation?", a: "You need to provide your exact Date of Birth, Time of Birth, and Place of Birth for an accurate horoscope reading." },
+            { q: "How are the consultations conducted?", a: "Consultations are primarily done via Phone Call or WhatsApp Chat, depending on the service you choose." },
+            { q: "Are my details kept confidential?", a: "Yes, 100%. All personal details, charts, and discussion topics are strictly confidential and never shared." }
+          ].map((faq, i) => (
+            <FadeIn key={i} delay={i * 0.1}>
+              <details className="group bg-brand-cream rounded-xl overflow-hidden cursor-pointer border border-brand-orange/10">
+                <summary className="font-bold p-6 flex items-center gap-4 list-none outline-none">
+                  <span className="w-2 h-2 shrink-0 bg-brand-orange" />
+                  <span className="flex-1 uppercase tracking-wide text-sm">{faq.q}</span>
+                  <ChevronDown size={18} className="text-brand-orange transition-transform group-open:rotate-180 shrink-0" />
+                </summary>
+                <div className="px-6 pb-6 pl-12 text-brand-brown/80 leading-relaxed">
+                  {faq.a}
+                </div>
+              </details>
+            </FadeIn>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+
+  const ctaSection: ReactNode = (
+    <section className="py-20 bg-brand-brown relative overflow-hidden px-4 md:px-8">
+      <CelestialBg tone="dark" className="absolute -top-32 -left-32 w-[420px] h-[420px] opacity-40" />
+      <CelestialBg tone="dark" className="absolute -bottom-32 -right-32 w-[420px] h-[420px] opacity-40" />
+
+      <div className="max-w-4xl mx-auto relative z-10">
+        <FadeIn>
+          <div className="bg-brand-peach rounded-[2rem] px-8 py-16 md:px-16 md:py-20 text-center shadow-2xl">
+            <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Get Started</h3>
+            <h2 className="font-serif text-3xl md:text-5xl font-bold text-brand-brown mb-6 leading-tight">
+              Book an Appointment
+            </h2>
+            <p className="text-brand-brown/70 text-lg mb-10 max-w-xl mx-auto">
+              Don&apos;t leave your life decisions to chance. Get precise astrological guidance today.
+            </p>
+            <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex bg-brand-orange text-white px-8 py-4 rounded-full font-bold text-lg items-center gap-2 hover:bg-gold-600 transition-colors shadow-xl shadow-brand-orange/20">
+               Book Your Session Now <ArrowRight size={20} />
+            </a>
+          </div>
+        </FadeIn>
+      </div>
+    </section>
+  )
+
+  const sectionsMap: Record<SectionKey, ReactNode> = {
+    stats: statsSection,
+    whyChoose: whyChooseSection,
+    about: aboutSection,
+    services: servicesSection,
+    certifications: certificationsSection,
+    banners: bannersSection,
+    testimonials: testimonialsSection,
+    media: mediaSection,
+    faq: faqSection,
+    cta: ctaSection,
+  }
+
   return (
     <div className="bg-gradient-to-b from-brand-peach to-[#FCF6EC] min-h-screen text-brand-brown font-sans selection:bg-brand-orange selection:text-white">
 
-      {/* 1. Hero Section */}
+      {/* 1. Hero Section — fixed */}
       <section className="relative pt-12 pb-16 px-4 md:px-8 overflow-hidden">
         <CelestialBg tone="light" className="absolute -top-40 -right-40 w-[560px] h-[560px] opacity-70" />
         <FadeIn>
@@ -130,420 +542,12 @@ export default async function HomePage() {
         </FadeIn>
       </section>
 
-      {/* 2. Stats Counters */}
-      <section className="py-16 bg-brand-cream border-y border-brand-orange/15 relative">
-        <div className="max-w-6xl mx-auto px-4 lg:px-8 relative z-10">
-          <div className="flex flex-col md:flex-row justify-center items-center gap-16 md:gap-32">
-            <FadeIn delay={0.1}>
-              <div className="text-center">
-                <Users size={32} className="mx-auto text-brand-orange mb-4 opacity-80" />
-                <div className="text-4xl md:text-5xl font-black mb-2 text-brand-brown">
-                  {stats.find(s => s.label.toLowerCase().includes('client'))?.value || '1,000+'}
-                </div>
-                <div className="text-sm font-bold text-brand-brown/60 uppercase tracking-widest">
-                  Happy Clients
-                </div>
-              </div>
-            </FadeIn>
-            <FadeIn delay={0.2}>
-              <div className="text-center">
-                <Calendar size={32} className="mx-auto text-brand-orange mb-4 opacity-80" />
-                <div className="text-4xl md:text-5xl font-black mb-2 text-brand-brown">
-                  {stats.find(s => s.label.toLowerCase().includes('consultation'))?.value || '2,000+'}
-                </div>
-                <div className="text-sm font-bold text-brand-brown/60 uppercase tracking-widest">
-                  Consultations Done
-                </div>
-              </div>
-            </FadeIn>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Why Choose Me */}
-      <section className="py-24 bg-white/50">
-        <div className="max-w-6xl mx-auto px-4 lg:px-8">
-          <FadeIn className="text-center mb-16">
-            <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Why Choose Me</h3>
-            <h2 className="font-serif text-4xl font-bold text-brand-brown">Guidance You Can Trust</h2>
-            <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
-          </FadeIn>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: ShieldCheck, title: "100% Confidential", desc: "Your privacy is our utmost priority in every session." },
-              { icon: Heart, title: "Honest Predictions", desc: "No sugarcoating, just the truth and actionable remedies." },
-              { icon: CheckCircle2, title: "Proven Remedies", desc: "Simple, effective, and practical astrological solutions." }
-            ].map((item, i) => (
-              <FadeIn key={i} delay={i * 0.1}>
-                <div className="bg-white p-8 rounded-3xl shadow-xl shadow-brand-brown/5 border border-brand-orange/10 h-full flex flex-col items-center text-center">
-                  <div className="w-16 h-16 bg-brand-cream rounded-2xl flex items-center justify-center text-brand-orange mb-6">
-                    <item.icon size={32} />
-                  </div>
-                  <h3 className="font-serif text-xl font-bold mb-3">{item.title}</h3>
-                  <p className="text-brand-brown/70 leading-relaxed">{item.desc}</p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. About */}
-      <section id="about" className="relative py-24 bg-brand-peach overflow-hidden scroll-mt-20">
-        <CelestialBg tone="light" className="absolute -bottom-40 -left-40 w-[480px] h-[480px] opacity-60" />
-        <div className="relative max-w-6xl mx-auto px-4 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <FadeIn className="space-y-6">
-              <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase">About The Astrologer</h3>
-              <h2 className="font-serif text-4xl md:text-5xl font-bold text-brand-brown leading-tight">
-                {settings.aboutTitle || "Guiding Lives with Vedic Wisdom"}
-              </h2>
-              <div className="w-16 h-1 bg-brand-orange rounded-full" />
-              <div className="prose prose-lg text-brand-brown/80">
-                {settings.aboutBody?.split('\n').map((paragraph: string, i: number) => (
-                  <p key={i}>{paragraph}</p>
-                ))}
-              </div>
-              <a href="#services" className="inline-flex items-center text-brand-orange font-bold hover:gap-3 transition-all gap-2 mt-4">
-                Explore Services <ArrowRight size={20} />
-              </a>
-            </FadeIn>
-
-            <FadeIn direction="up">
-              <div className="relative">
-                <div className="aspect-square rounded-3xl overflow-hidden shadow-2xl">
-                  {settings.aboutImageUrl ? (
-                    <img src={settings.aboutImageUrl} alt="About" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-brand-cream flex items-center justify-center border-4 border-white">
-                      <div className="text-brand-brown/30 text-center font-bold text-xl">Image Placeholder</div>
-                    </div>
-                  )}
-                </div>
-                {/* Decorative element */}
-                <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl flex items-center gap-4">
-                  <div className="w-12 h-12 bg-brand-teal rounded-full flex items-center justify-center text-brand-peach">
-                    <Award size={24} />
-                  </div>
-                  <div>
-                    <div className="font-serif font-bold text-xl">10+ Years</div>
-                    <div className="text-sm font-bold text-brand-brown/60 uppercase">Experience</div>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Services / Pricing */}
-      <section id="services" className="bg-white scroll-mt-20">
-        {/* Celestial pricing header band */}
-        <div className="relative overflow-hidden bg-brand-brown">
-          <CelestialBg tone="dark" className="absolute left-0 top-1/2 -translate-y-1/2 w-[420px] h-[420px] opacity-40" />
-          <CelestialBg tone="dark" className="absolute right-0 top-1/2 -translate-y-1/2 w-[420px] h-[420px] opacity-40" />
-
-          <FadeIn className="relative text-center py-20 px-4">
-            <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Consultations</h3>
-            <h2 className="font-serif text-5xl md:text-6xl font-bold text-brand-peach">Pricing</h2>
-            <a href="#contact" className="inline-block mt-8 px-8 py-3 rounded-full bg-brand-orange text-white font-bold text-sm uppercase tracking-wider hover:bg-gold-600 transition-colors shadow-lg shadow-brand-orange/20">
-              Contact Us
-            </a>
-          </FadeIn>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-4 lg:px-8 -mt-16 pb-24 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
-            {services.map((service: (typeof services)[number], i: number) => {
-              const offerLabel = getOfferLabel(service)
-              return (
-              <FadeIn key={service.id} delay={i * 0.1}>
-                <div
-                  className={`relative flex flex-col p-8 rounded-[2rem] h-full transition-transform hover:-translate-y-1 ${
-                    service.isPopular
-                      ? 'bg-white border border-brand-orange/15 shadow-2xl shadow-brand-brown/15 lg:scale-105 z-10'
-                      : 'bg-brand-brown border border-white/10 shadow-xl shadow-brand-brown/20 text-brand-peach'
-                  }`}
-                >
-                  {service.isPopular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand-orange text-white px-6 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md">
-                      Most Popular
-                    </div>
-                  )}
-                  {offerLabel && (
-                    <div className="absolute -top-3 -right-3 bg-brand-teal text-brand-peach px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1">
-                      <Sparkles size={12} /> {offerLabel}
-                    </div>
-                  )}
-
-                  <h3 className={`font-serif text-2xl font-bold mb-3 ${service.isPopular ? 'text-brand-brown' : 'text-brand-peach'}`}>{service.title}</h3>
-                  <div className={`text-sm font-medium mb-4 flex items-center gap-2 ${service.isPopular ? 'text-brand-brown/60' : 'text-brand-peach/60'}`}>
-                    <Clock size={16} className="text-brand-orange" />
-                    {service.durationMin} mins · <span className="capitalize">{service.mode.replace(/_/g, ' ').toLowerCase()}</span>
-                  </div>
-
-                  {service.description && (
-                    <p className={`text-sm mb-6 leading-relaxed line-clamp-3 ${service.isPopular ? 'text-brand-brown/70' : 'text-brand-peach/70'}`}>
-                      {service.description}
-                    </p>
-                  )}
-
-                  <div className="mb-8">
-                    <div className="flex items-end gap-3">
-                      <span className={`font-serif text-5xl font-bold ${service.isPopular ? 'text-brand-orange' : 'text-brand-peach'}`}>₹{service.price}</span>
-                      {service.originalPrice && (
-                        <span className={`text-xl line-through font-bold mb-1 ${service.isPopular ? 'text-brand-brown/40' : 'text-brand-peach/40'}`}>₹{service.originalPrice}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-auto pt-6">
-                    <a
-                      href={`/book/${service.id}`}
-                      className={`w-full flex items-center justify-center h-14 rounded-xl font-bold transition-all ${
-                        service.isPopular
-                          ? 'bg-brand-orange text-white hover:bg-gold-600 shadow-lg shadow-brand-orange/20'
-                          : 'border-2 border-brand-orange/40 text-brand-peach hover:bg-brand-orange hover:border-brand-orange hover:text-white'
-                      }`}
-                    >
-                      Book Session
-                    </a>
-                  </div>
-                </div>
-              </FadeIn>
-              )
-            })}
-
-          </div>
-        </div>
-      </section>
-
-      {/* 6a. Offers */}
-      {(() => {
-        const offerServices = services.filter((s: (typeof services)[number]) => getOfferPrice(s) !== null)
-        if (offerServices.length === 0) return null
-        return (
-          <section id="offers" className="relative py-24 bg-brand-brown overflow-hidden scroll-mt-20">
-            <CelestialBg tone="dark" className="absolute -top-32 -left-32 w-[420px] h-[420px] opacity-30" />
-            <CelestialBg tone="dark" className="absolute -bottom-32 -right-32 w-[420px] h-[420px] opacity-30" />
-            <div className="relative max-w-6xl mx-auto px-4 lg:px-8">
-              <FadeIn className="text-center mb-16">
-                <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Limited Time</h3>
-                <h2 className="font-serif text-4xl font-bold text-brand-peach">Special Offers</h2>
-                <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
-              </FadeIn>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {offerServices.map((service: (typeof services)[number], i: number) => {
-                  const discounted = getOfferPrice(service)!
-                  const offerLabel = getOfferLabel(service)
-                  return (
-                    <FadeIn key={service.id} delay={i * 0.1}>
-                      <div className="relative flex flex-col bg-brand-peach p-8 rounded-[2rem] h-full shadow-xl">
-                        <div className="absolute -top-3 -right-3 bg-brand-orange text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1">
-                          <Sparkles size={12} /> {offerLabel}
-                        </div>
-                        <h3 className="font-serif text-2xl font-bold mb-3 text-brand-brown">{service.title}</h3>
-                        <div className="text-sm font-medium mb-6 flex items-center gap-2 text-brand-brown/60">
-                          <Clock size={16} className="text-brand-orange" />
-                          {service.durationMin} mins · <span className="capitalize">{service.mode.replace(/_/g, ' ').toLowerCase()}</span>
-                        </div>
-                        <div className="mb-8 flex items-end gap-3">
-                          <span className="font-serif text-5xl font-bold text-brand-orange">₹{discounted}</span>
-                          <span className="text-xl line-through font-bold mb-1 text-brand-brown/40">₹{service.price}</span>
-                        </div>
-                        <div className="mt-auto pt-6">
-                          <a
-                            href={`/book/${service.id}`}
-                            className="w-full flex items-center justify-center h-14 rounded-xl font-bold transition-all bg-brand-orange text-white hover:bg-gold-600 shadow-lg shadow-brand-orange/20"
-                          >
-                            Claim Offer
-                          </a>
-                        </div>
-                      </div>
-                    </FadeIn>
-                  )
-                })}
-              </div>
-            </div>
-          </section>
-        )
-      })()}
-
-      {/* 6. Certifications */}
-      {certifications.length > 0 && (
-        <section className="py-24 bg-brand-cream">
-          <div className="max-w-6xl mx-auto px-4 lg:px-8 text-center">
-            <FadeIn>
-              <GraduationCap size={48} className="mx-auto text-brand-orange mb-6" />
-              <h2 className="font-serif text-3xl md:text-4xl font-bold text-brand-brown mb-12">Certified & Recognized</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                 {certifications.map((cert: (typeof certifications)[number], i: number) => (
-                   <FadeIn key={cert.id} delay={i * 0.1}>
-                     <div className="bg-white rounded-[2rem] overflow-hidden shadow-lg shadow-brand-brown/5 border border-brand-orange/10 h-full flex flex-col hover:-translate-y-1 transition-transform">
-                       {cert.imageUrl ? (
-                         <div className="aspect-[4/3] w-full bg-brand-cream relative">
-                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                           <img src={cert.imageUrl} alt={cert.title} className="object-cover w-full h-full" />
-                         </div>
-                       ) : (
-                         <div className="aspect-[4/3] w-full bg-brand-cream flex items-center justify-center text-brand-orange/20">
-                           <Award size={64} />
-                         </div>
-                       )}
-                       <div className="p-6 flex flex-col items-center text-center flex-1">
-                         <h3 className="font-serif font-bold text-lg text-brand-brown mb-2">{cert.title}</h3>
-                         {(cert.issuer || cert.year) && (
-                           <div className="text-sm text-brand-brown/60 font-medium mt-auto">
-                             {cert.issuer} {cert.year && `(${cert.year})`}
-                           </div>
-                         )}
-                       </div>
-                     </div>
-                   </FadeIn>
-                 ))}
-              </div>
-            </FadeIn>
-          </div>
-        </section>
+      {/* Reorderable / hideable middle sections, admin-controlled */}
+      {sectionOrder.map((key) =>
+        sectionVisible[key] ? <Fragment key={key}>{sectionsMap[key]}</Fragment> : null
       )}
 
-      {/* 6b. Banners */}
-      {banners.length > 0 && (
-        <section className="px-4 md:px-8 py-16">
-          <div className="max-w-6xl mx-auto">
-            <FadeIn>
-              <BannerCarousel banners={banners} />
-            </FadeIn>
-          </div>
-        </section>
-      )}
-
-      {/* 7. Testimonials */}
-      <section className="py-24 bg-white overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 lg:px-8">
-          <FadeIn className="text-center mb-16">
-             <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Testimonials</h3>
-             <h2 className="font-serif text-4xl font-bold text-brand-brown">What Clients Say</h2>
-             <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
-          </FadeIn>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((item) => (
-              <FadeIn key={item} delay={item * 0.1}>
-                <div className="bg-brand-peach p-8 rounded-3xl relative">
-                  <Quote size={40} className="absolute top-6 right-6 text-brand-orange/20" />
-                  <div className="flex gap-1 mb-4 text-brand-orange">
-                    <Star size={16} className="fill-current" />
-                    <Star size={16} className="fill-current" />
-                    <Star size={16} className="fill-current" />
-                    <Star size={16} className="fill-current" />
-                    <Star size={16} className="fill-current" />
-                  </div>
-                  <p className="text-brand-brown font-medium italic leading-relaxed mb-6">
-                    "Accurate predictions that completely changed my perspective on my career choices. Highly recommended for genuine advice."
-                  </p>
-                  <div className="font-serif font-bold">- Happy Client</div>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 8. Media */}
-      {(gallery.length > 0 || videos.length > 0) && (
-        <section className="py-24 bg-brand-peach">
-          <div className="max-w-6xl mx-auto px-4 lg:px-8">
-            <FadeIn className="text-center mb-16">
-              <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Media</h3>
-              <h2 className="font-serif text-4xl font-bold text-brand-brown">Gallery & Videos</h2>
-              <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
-            </FadeIn>
-
-            <div className="space-y-20">
-              {videos.length > 0 && (
-                <div>
-                  <h3 className="font-serif text-2xl font-bold text-brand-brown mb-8 text-center md:text-left">Videos</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {videos.map((vid: (typeof videos)[number], i: number) => (
-                      <FadeIn key={vid.id} delay={i * 0.1}>
-                        <div className="rounded-3xl overflow-hidden shadow-xl shadow-brand-brown/5">
-                          <LiteYouTube videoId={vid.videoId} title={vid.title || "YouTube Video"} />
-                        </div>
-                      </FadeIn>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {gallery.length > 0 && (
-                <div>
-                  <h3 className="font-serif text-2xl font-bold text-brand-brown mb-8 text-center md:text-left">Gallery</h3>
-                  <GalleryGrid gallery={gallery} />
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 9. FAQ */}
-      <section className="py-24 bg-white">
-        <div className="max-w-3xl mx-auto px-4 lg:px-8">
-          <FadeIn className="mb-16">
-            <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">FAQ</h3>
-            <h2 className="font-serif text-4xl md:text-5xl font-bold text-brand-brown">Frequently Asked</h2>
-          </FadeIn>
-
-          <div className="space-y-3">
-            {[
-              { q: "What details are required for a consultation?", a: "You need to provide your exact Date of Birth, Time of Birth, and Place of Birth for an accurate horoscope reading." },
-              { q: "How are the consultations conducted?", a: "Consultations are primarily done via Phone Call or WhatsApp Chat, depending on the service you choose." },
-              { q: "Are my details kept confidential?", a: "Yes, 100%. All personal details, charts, and discussion topics are strictly confidential and never shared." }
-            ].map((faq, i) => (
-              <FadeIn key={i} delay={i * 0.1}>
-                <details className="group bg-brand-cream rounded-xl overflow-hidden cursor-pointer border border-brand-orange/10">
-                  <summary className="font-bold p-6 flex items-center gap-4 list-none outline-none">
-                    <span className="w-2 h-2 shrink-0 bg-brand-orange" />
-                    <span className="flex-1 uppercase tracking-wide text-sm">{faq.q}</span>
-                    <ChevronDown size={18} className="text-brand-orange transition-transform group-open:rotate-180 shrink-0" />
-                  </summary>
-                  <div className="px-6 pb-6 pl-12 text-brand-brown/80 leading-relaxed">
-                    {faq.a}
-                  </div>
-                </details>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 10. Call-to-Action Band */}
-      <section className="py-20 bg-brand-brown relative overflow-hidden px-4 md:px-8">
-        <CelestialBg tone="dark" className="absolute -top-32 -left-32 w-[420px] h-[420px] opacity-40" />
-        <CelestialBg tone="dark" className="absolute -bottom-32 -right-32 w-[420px] h-[420px] opacity-40" />
-
-        <div className="max-w-4xl mx-auto relative z-10">
-          <FadeIn>
-            <div className="bg-brand-peach rounded-[2rem] px-8 py-16 md:px-16 md:py-20 text-center shadow-2xl">
-              <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Get Started</h3>
-              <h2 className="font-serif text-3xl md:text-5xl font-bold text-brand-brown mb-6 leading-tight">
-                Book an Appointment
-              </h2>
-              <p className="text-brand-brown/70 text-lg mb-10 max-w-xl mx-auto">
-                Don&apos;t leave your life decisions to chance. Get precise astrological guidance today.
-              </p>
-              <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex bg-brand-orange text-white px-8 py-4 rounded-full font-bold text-lg items-center gap-2 hover:bg-gold-600 transition-colors shadow-xl shadow-brand-orange/20">
-                 Book Your Session Now <ArrowRight size={20} />
-              </a>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* 11. Contact & Booking (Footer-like) */}
+      {/* Contact & Footer band — fixed */}
       <footer id="contact" className="relative py-16 bg-brand-brown text-brand-peach overflow-hidden scroll-mt-20">
         <CelestialBg tone="dark" className="absolute -top-24 right-0 w-[380px] h-[380px] opacity-30" />
         <div className="relative max-w-6xl mx-auto px-4 lg:px-8">
