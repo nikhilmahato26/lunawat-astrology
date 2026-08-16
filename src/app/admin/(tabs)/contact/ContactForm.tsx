@@ -1,38 +1,43 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { TextField, SaveBar, ToggleSwitch, TimeField } from "@/components/admin/ui"
 import { updateContactData } from "@/actions/settings"
 import type { SiteSettings, BusinessHour } from "@prisma/client"
 
 export function ContactForm({ settings, initialHours }: { settings: SiteSettings, initialHours: BusinessHour[] }) {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     phone: settings.phone || "",
     whatsapp: settings.whatsapp || "",
     email: settings.email || "",
     upiNumber: settings.upiNumber || "",
     address: settings.address || "",
     mapEmbedUrl: settings.mapEmbedUrl || "",
-  })
+  }
+  const [formData, setFormData] = useState(initialFormData)
 
   // Sort hours by day (0=Sunday, 1=Monday... or however it's stored. The seed script used 1-6 for Mon-Sat, 0 for Sun)
   const sortedHours = [...initialHours].sort((a, b) => a.day === 0 ? 1 : b.day === 0 ? -1 : a.day - b.day)
 
   const [hours, setHours] = useState<BusinessHour[]>(sortedHours)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  // Baseline updates after a successful save — comparing against the props directly would
+  // leave isDirty stuck true forever post-save, since props on an already-mounted client
+  // component never update themselves.
+  const [saved, setSaved] = useState({ formData: initialFormData, hours: sortedHours })
 
   const isDirty =
-    formData.phone !== (settings.phone || "") ||
-    formData.whatsapp !== (settings.whatsapp || "") ||
-    formData.email !== (settings.email || "") ||
-    formData.upiNumber !== (settings.upiNumber || "") ||
-    formData.address !== (settings.address || "") ||
-    formData.mapEmbedUrl !== (settings.mapEmbedUrl || "") ||
-    JSON.stringify(hours) !== JSON.stringify(sortedHours)
+    JSON.stringify(formData) !== JSON.stringify(saved.formData) ||
+    JSON.stringify(hours) !== JSON.stringify(saved.hours)
 
   const handleSave = () => {
     startTransition(async () => {
       await updateContactData({ ...formData, hours })
+      setSaved({ formData, hours })
+      router.refresh()
     })
   }
 

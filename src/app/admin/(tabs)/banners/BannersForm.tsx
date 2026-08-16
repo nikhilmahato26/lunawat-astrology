@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { TextField, SaveBar, ToggleSwitch } from "@/components/admin/ui"
 import { RepeatableList } from "@/components/admin/RepeatableList"
 import { ImageUploader } from "@/components/admin/ImageUploader"
@@ -33,12 +34,20 @@ export function BannersForm({ initialBanners }: { initialBanners: Banner[] }) {
   const initialItems = initialBanners.map(toItem)
   const [banners, setBanners] = useState<BannerItem[]>(initialItems)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
-  const isDirty = JSON.stringify(banners) !== JSON.stringify(initialItems)
+  // Baseline updates after a successful save — comparing against the props directly would
+  // leave isDirty stuck true forever post-save, since props on an already-mounted client
+  // component never update themselves.
+  const [saved, setSaved] = useState(initialItems)
+
+  const isDirty = JSON.stringify(banners) !== JSON.stringify(saved)
 
   const handleSave = () => {
     startTransition(async () => {
       await updateBanners(banners)
+      setSaved(banners)
+      router.refresh()
     })
   }
 

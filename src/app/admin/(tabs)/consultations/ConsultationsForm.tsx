@@ -1,11 +1,16 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { X } from "lucide-react"
 import { TextField, TextArea, SaveBar, ToggleSwitch } from "@/components/admin/ui"
 import { RepeatableList } from "@/components/admin/RepeatableList"
 import { updateServices, updateSiteSettings } from "@/actions/settings"
 import type { Service } from "@prisma/client"
+
+// The only allowed Mode values — stored verbatim as the display label, no separate
+// enum/transformation, so what the admin picks is exactly what shows on the site.
+export const MODE_OPTIONS = ["Normal", "VIP", "In-Person", "Phone Call", "Video Call", "Custom"] as const
 
 const BOOKING_FIELD_OPTIONS: { key: string; label: string }[] = [
   { key: "email",    label: "Email" },
@@ -18,6 +23,13 @@ const BOOKING_FIELD_OPTIONS: { key: string; label: string }[] = [
 
 const selectClass =
   "w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black bg-white text-sm"
+
+// Same look as selectClass but without `w-full`, so it can be sized by its flex container
+// instead — appending `w-28` alongside `w-full` doesn't work: both are valid Tailwind
+// utilities and whichever lands later in the generated stylesheet wins, not whichever is
+// written last in the className string.
+const compactSelectClass =
+  "px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black bg-white text-sm"
 
 export function ConsultationsForm({
   initialServices,
@@ -39,13 +51,26 @@ export function ConsultationsForm({
   const [newCategory, setNewCategory] = useState("")
   const [discountBadgeFormat, setDiscountBadgeFormat] = useState(initialDiscountBadgeFormat)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  // The "saved" baseline starts as the server-rendered props, but — unlike the props
+  // themselves — it updates the moment a save succeeds. Comparing against the raw props
+  // would leave isDirty (and the Save bar) stuck true forever after a real, successful
+  // save, since props from an already-mounted client component never update on their own.
+  const [saved, setSaved] = useState({
+    services: initialServices,
+    enablePaymentGateway: initialEnablePaymentGateway,
+    bookingFields: initialBookingFields,
+    categories: initialCategories,
+    discountBadgeFormat: initialDiscountBadgeFormat,
+  })
 
   const isDirty =
-    JSON.stringify(services) !== JSON.stringify(initialServices) ||
-    enablePaymentGateway !== initialEnablePaymentGateway ||
-    JSON.stringify(bookingFields) !== JSON.stringify(initialBookingFields) ||
-    JSON.stringify(categories) !== JSON.stringify(initialCategories) ||
-    discountBadgeFormat !== initialDiscountBadgeFormat
+    JSON.stringify(services) !== JSON.stringify(saved.services) ||
+    enablePaymentGateway !== saved.enablePaymentGateway ||
+    JSON.stringify(bookingFields) !== JSON.stringify(saved.bookingFields) ||
+    JSON.stringify(categories) !== JSON.stringify(saved.categories) ||
+    discountBadgeFormat !== saved.discountBadgeFormat
 
   const handleSave = () => {
     startTransition(async () => {
@@ -53,6 +78,8 @@ export function ConsultationsForm({
         updateServices(services),
         updateSiteSettings({ enablePaymentGateway, bookingFields, consultationCategories: categories, discountBadgeFormat }),
       ])
+      setSaved({ services, enablePaymentGateway, bookingFields, categories, discountBadgeFormat })
+      router.refresh()
     })
   }
 
@@ -102,18 +129,17 @@ export function ConsultationsForm({
           <label className="block text-sm font-medium text-zinc-900">Mode</label>
           <select
             value={service.mode}
-            onChange={(e) => updateItem(index, { ...service, mode: e.target.value as Service["mode"] })}
+            onChange={(e) => updateItem(index, { ...service, mode: e.target.value })}
             className={selectClass}
           >
-            <option value="VIDEO_CALL">Video Call</option>
-            <option value="PHONE_CALL">Phone Call</option>
-            <option value="IN_PERSON">In Person</option>
-            <option value="CHAT">Chat</option>
+            {MODE_OPTIONS.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
           </select>
         </div>
 
-        {/* ── Price + Original + Duration ── */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* ── Price + Original ── */}
+        <div className="grid grid-cols-2 gap-4">
           <TextField
             label="Price (₹)"
             type="number"
@@ -132,24 +158,26 @@ export function ConsultationsForm({
             }
             hint="Optional strike-through — also drives the auto discount badge"
           />
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-zinc-900">Duration</label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={service.durationMin ?? ""}
-                onChange={(e) => updateItem(index, { ...service, durationMin: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <select
-                value={service.durationUnit}
-                onChange={(e) => updateItem(index, { ...service, durationUnit: e.target.value })}
-                className={`${selectClass} w-24 shrink-0`}
-              >
-                <option value="MIN">mins</option>
-                <option value="HR">hr</option>
-              </select>
-            </div>
+        </div>
+
+        {/* ── Duration ── */}
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-zinc-900">Duration</label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={service.durationMin ?? ""}
+              onChange={(e) => updateItem(index, { ...service, durationMin: Number(e.target.value) })}
+              className="flex-1 min-w-0 px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+            />
+            <select
+              value={service.durationUnit}
+              onChange={(e) => updateItem(index, { ...service, durationUnit: e.target.value })}
+              className={`${compactSelectClass} w-28 shrink-0`}
+            >
+              <option value="MIN">mins</option>
+              <option value="HR">hr</option>
+            </select>
           </div>
         </div>
 
@@ -301,7 +329,7 @@ export function ConsultationsForm({
             ({
               id: crypto.randomUUID(),
               title: "New Consultation",
-              mode: "VIDEO_CALL",
+              mode: "Video Call",
               price: 500,
               originalPrice: null,
               durationMin: 30,

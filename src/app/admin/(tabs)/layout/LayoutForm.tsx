@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { GripVertical, Eye, EyeOff } from "lucide-react"
 import { SaveBar } from "@/components/admin/ui"
 import { updateSiteSettings } from "@/actions/settings"
@@ -31,10 +32,16 @@ export function LayoutForm({
   const [visibility, setVisibility] = useState<Visibility>(initialVisibility)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  // Baseline updates after a successful save — comparing against the props directly would
+  // leave isDirty stuck true forever post-save, since props on an already-mounted client
+  // component never update themselves.
+  const [saved, setSaved] = useState({ order: initialOrder, visibility: initialVisibility })
 
   const isDirty =
-    JSON.stringify(order) !== JSON.stringify(initialOrder) ||
-    JSON.stringify(visibility) !== JSON.stringify(initialVisibility)
+    JSON.stringify(order) !== JSON.stringify(saved.order) ||
+    JSON.stringify(visibility) !== JSON.stringify(saved.visibility)
 
   const handleSave = () => {
     startTransition(async () => {
@@ -51,6 +58,8 @@ export function LayoutForm({
         showFaq: visibility.faq,
         showCta: visibility.cta,
       })
+      setSaved({ order, visibility })
+      router.refresh()
     })
   }
 

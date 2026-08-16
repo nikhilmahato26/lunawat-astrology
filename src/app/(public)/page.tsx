@@ -9,7 +9,7 @@ import {
 import { FadeIn } from "@/components/public/FadeIn"
 import { LiteYouTube } from "@/components/public/LiteYouTube"
 import { GalleryGrid } from "@/components/public/GalleryGrid"
-import { BannerCarousel } from "@/components/public/BannerCarousel"
+import { BannerGrid } from "@/components/public/BannerGrid"
 import { CelestialBg } from "@/components/public/CelestialBg"
 import { getDiscountLabel, type DiscountBadgeFormat } from "@/lib/pricing"
 import { formatDuration } from "@/lib/duration"
@@ -195,7 +195,7 @@ export default async function HomePage() {
                   <Award size={24} />
                 </div>
                 <div>
-                  <div className="font-serif font-bold text-xl">10+ Years</div>
+                  <div className="font-serif font-bold text-xl">{settings.experience ?? 23}+ Years</div>
                   <div className="text-sm font-bold text-brand-brown/60 uppercase">Experience</div>
                 </div>
               </div>
@@ -249,7 +249,7 @@ export default async function HomePage() {
                 <h3 className={`font-serif text-2xl font-bold mb-3 ${service.isPopular ? 'text-brand-brown' : 'text-brand-peach'}`}>{service.title}</h3>
                 <div className={`text-sm font-medium mb-4 flex items-center gap-2 ${service.isPopular ? 'text-brand-brown/60' : 'text-brand-peach/60'}`}>
                   <Clock size={16} className="text-brand-orange" />
-                  {formatDuration(service.durationMin, service.durationUnit)} · <span className="capitalize">{service.mode.replace(/_/g, ' ').toLowerCase()}</span>
+                  {formatDuration(service.durationMin, service.durationUnit)} · <span>{service.mode}</span>
                 </div>
 
                 {service.description && (
@@ -330,7 +330,7 @@ export default async function HomePage() {
     <section className="px-4 md:px-8 py-16">
       <div className="max-w-6xl mx-auto">
         <FadeIn>
-          <BannerCarousel banners={banners} />
+          <BannerGrid banners={banners} />
         </FadeIn>
       </div>
     </section>
@@ -492,7 +492,12 @@ export default async function HomePage() {
             <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 relative z-10">
               {/* Profile Image / Icon */}
               {settings.heroImageUrl ? (
-                <img src={settings.heroImageUrl} alt={settings.personName || "Profile"} className="w-48 h-48 md:w-64 md:h-64 rounded-3xl object-cover shadow-lg shrink-0" />
+                <img
+                  src={settings.heroImageUrl}
+                  alt={settings.personName || "Profile"}
+                  className="w-48 h-48 md:w-64 md:h-64 rounded-3xl object-cover shadow-lg shrink-0"
+                  style={{ objectPosition: settings.heroImagePosition || "50% 50%" }}
+                />
               ) : (
                 <div className="w-48 h-48 md:w-64 md:h-64 bg-brand-teal rounded-3xl flex items-center justify-center text-brand-peach text-8xl md:text-9xl font-serif font-medium shrink-0 shadow-lg">
                   {settings.personName?.[0] || 'D'}
@@ -507,7 +512,7 @@ export default async function HomePage() {
                   </div>
                 )}
 
-                <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-[1.1] tracking-tight">
+                <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-[1.1] tracking-tight">
                   {settings.heroHeadline || "Find the Right Path in Career, Marriage & Health"}
                 </h1>
 
@@ -527,10 +532,12 @@ export default async function HomePage() {
                 </div>
 
                 <div className="flex flex-wrap justify-center md:justify-start gap-6 text-sm text-brand-brown/50 font-bold uppercase tracking-wider">
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full bg-brand-orange/15 flex items-center justify-center text-[10px]">🌐</span>
-                    Hindi, English
-                  </span>
+                  {settings.languages.length > 0 && (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-brand-orange/15 flex items-center justify-center text-[10px]">🌐</span>
+                      {settings.languages.join(', ')}
+                    </span>
+                  )}
                   <span className="flex items-center gap-2">
                     <MapPin size={16} className="text-brand-orange" />
                     {settings.address || 'Parola'}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { RepeatableList } from "@/components/admin/RepeatableList"
 import { TextField, SaveBar, ToggleSwitch } from "@/components/admin/ui"
 import { ImageUploader } from "@/components/admin/ImageUploader"
@@ -21,28 +22,26 @@ export function CertificationsForm({
   initialCertifications: any[]
   initialShowSection: boolean
 }) {
-  const [certs, setCerts] = useState<Certification[]>(
-    initialCertifications.map(c => ({
-      id: c.id,
-      title: c.title,
-      issuer: c.issuer || "",
-      year: c.year || "",
-      imageUrl: c.imageUrl || "",
-    }))
-  )
+  const initialItems: Certification[] = initialCertifications.map(c => ({
+    id: c.id,
+    title: c.title,
+    issuer: c.issuer || "",
+    year: c.year || "",
+    imageUrl: c.imageUrl || "",
+  }))
+  const [certs, setCerts] = useState<Certification[]>(initialItems)
   const [showSection, setShowSection] = useState(initialShowSection)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
+  // Baseline updates after a successful save — comparing against the props directly would
+  // leave isDirty stuck true forever post-save, since props on an already-mounted client
+  // component never update themselves.
+  const [saved, setSaved] = useState({ certs: initialItems, showSection: initialShowSection })
 
   const isDirty =
-    JSON.stringify(certs) !== JSON.stringify(
-      initialCertifications.map(c => ({
-        id: c.id,
-        title: c.title,
-        issuer: c.issuer || "",
-        year: c.year || "",
-        imageUrl: c.imageUrl || "",
-      }))
-    ) || showSection !== initialShowSection
+    JSON.stringify(certs) !== JSON.stringify(saved.certs) ||
+    showSection !== saved.showSection
 
   const handleSave = () => {
     startTransition(async () => {
@@ -50,6 +49,8 @@ export function CertificationsForm({
         updateCertifications(certs),
         updateSiteSettings({ showCertifications: showSection }),
       ])
+      setSaved({ certs, showSection })
+      router.refresh()
     })
   }
 

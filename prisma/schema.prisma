@@ -28,6 +28,7 @@ model SiteSettings {
   heroHeadline  String?
   heroSubtext   String?
   heroImageUrl  String?
+  heroImagePosition String @default("50% 50%")  // CSS object-position — which part of the photo shows in the cropped hero frame
   logoUrl       String?
   languages     String[] @default([])          // hindi, english, marathi
   experience    Int?     @default(23)

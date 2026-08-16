@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { TextField, TextArea, SaveBar } from "@/components/admin/ui"
 import { RepeatableList } from "@/components/admin/RepeatableList"
 import { ImageUploader } from "@/components/admin/ImageUploader"
@@ -8,23 +9,30 @@ import { updateAboutData } from "@/actions/settings"
 import type { Stat, SiteSettings } from "@prisma/client"
 
 export function AboutForm({ settings, initialStats }: { settings: SiteSettings, initialStats: Stat[] }) {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     title: settings.aboutTitle || "",
     body: settings.aboutBody || "",
     aboutImageUrl: settings.aboutImageUrl || ""
-  })
+  }
+  const [formData, setFormData] = useState(initialFormData)
   const [stats, setStats] = useState<Stat[]>(initialStats)
   const [isPending, startTransition] = useTransition()
-  
-  const isDirty = 
-    formData.title !== (settings.aboutTitle || "") ||
-    formData.body !== (settings.aboutBody || "") ||
-    formData.aboutImageUrl !== (settings.aboutImageUrl || "") ||
-    JSON.stringify(stats) !== JSON.stringify(initialStats)
+  const router = useRouter()
+
+  // Baseline updates after a successful save — comparing against the props directly would
+  // leave isDirty stuck true forever post-save, since props on an already-mounted client
+  // component never update themselves.
+  const [saved, setSaved] = useState({ formData: initialFormData, stats: initialStats })
+
+  const isDirty =
+    JSON.stringify(formData) !== JSON.stringify(saved.formData) ||
+    JSON.stringify(stats) !== JSON.stringify(saved.stats)
 
   const handleSave = () => {
     startTransition(async () => {
       await updateAboutData({ ...formData, stats })
+      setSaved({ formData, stats })
+      router.refresh()
     })
   }
 

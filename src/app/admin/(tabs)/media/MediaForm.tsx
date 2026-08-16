@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { RepeatableList } from "@/components/admin/RepeatableList"
 import { ImageUploader } from "@/components/admin/ImageUploader"
 import { TextField, SaveBar } from "@/components/admin/ui"
@@ -25,21 +26,27 @@ function extractYouTubeId(url: string) {
 }
 
 export function MediaForm({ initialImages, initialVideos }: { initialImages: any[], initialVideos: any[] }) {
-  const [images, setImages] = useState<ImageItem[]>(
-    initialImages.map(img => ({ imageUrl: img.imageUrl, publicId: img.publicId }))
-  )
-  const [videos, setVideos] = useState<VideoItem[]>(
-    initialVideos.map(vid => ({ youtubeUrl: vid.youtubeUrl, videoId: vid.videoId, title: vid.title || "" }))
-  )
+  const initialImageItems = initialImages.map(img => ({ imageUrl: img.imageUrl, publicId: img.publicId }))
+  const initialVideoItems = initialVideos.map(vid => ({ youtubeUrl: vid.youtubeUrl, videoId: vid.videoId, title: vid.title || "" }))
+  const [images, setImages] = useState<ImageItem[]>(initialImageItems)
+  const [videos, setVideos] = useState<VideoItem[]>(initialVideoItems)
   const [isPending, startTransition] = useTransition()
-  
-  const isDirty = 
-    JSON.stringify(images) !== JSON.stringify(initialImages.map(img => ({ imageUrl: img.imageUrl, publicId: img.publicId }))) ||
-    JSON.stringify(videos) !== JSON.stringify(initialVideos.map(vid => ({ youtubeUrl: vid.youtubeUrl, videoId: vid.videoId, title: vid.title || "" })))
+  const router = useRouter()
+
+  // Baseline updates after a successful save — comparing against the props directly would
+  // leave isDirty stuck true forever post-save, since props on an already-mounted client
+  // component never update themselves.
+  const [saved, setSaved] = useState({ images: initialImageItems, videos: initialVideoItems })
+
+  const isDirty =
+    JSON.stringify(images) !== JSON.stringify(saved.images) ||
+    JSON.stringify(videos) !== JSON.stringify(saved.videos)
 
   const handleSave = () => {
     startTransition(async () => {
       await updateMedia({ images, videos })
+      setSaved({ images, videos })
+      router.refresh()
     })
   }
 

@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { TextField, TextArea, SaveBar, SuggestionChips } from "@/components/admin/ui"
 import { ImageUploader } from "@/components/admin/ImageUploader"
+import { FocalPointPicker } from "@/components/admin/FocalPointPicker"
 import { updateSiteSettings } from "@/actions/settings"
 import type { SiteSettings } from "@prisma/client"
 
 export function DetailsForm({ settings }: { settings: SiteSettings }) {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     businessName: settings.businessName,
     personName: settings.personName,
     credentials: settings.credentials || "",
@@ -17,21 +19,19 @@ export function DetailsForm({ settings }: { settings: SiteSettings }) {
     heroHeadline: settings.heroHeadline || "",
     heroSubtext: settings.heroSubtext || "",
     heroImageUrl: settings.heroImageUrl || "",
-  })
+    heroImagePosition: settings.heroImagePosition || "50% 50%",
+  }
+  const [formData, setFormData] = useState(initialFormData)
 
   const [isPending, startTransition] = useTransition()
-  
-  // Basic dirty check
-  const isDirty = 
-    formData.businessName !== settings.businessName ||
-    formData.personName !== settings.personName ||
-    formData.credentials !== (settings.credentials || "") ||
-    formData.tagline !== (settings.tagline || "") ||
-    formData.experience !== (settings.experience || 0) ||
-    formData.languages !== settings.languages.join(", ") ||
-    formData.heroHeadline !== (settings.heroHeadline || "") ||
-    formData.heroSubtext !== (settings.heroSubtext || "") ||
-    formData.heroImageUrl !== (settings.heroImageUrl || "")
+  const router = useRouter()
+
+  // Baseline updates after a successful save — comparing against the props directly would
+  // leave isDirty stuck true forever post-save, since props on an already-mounted client
+  // component never update themselves.
+  const [saved, setSaved] = useState(initialFormData)
+
+  const isDirty = JSON.stringify(formData) !== JSON.stringify(saved)
 
   const handleSave = () => {
     startTransition(async () => {
@@ -45,7 +45,10 @@ export function DetailsForm({ settings }: { settings: SiteSettings }) {
         heroHeadline: formData.heroHeadline,
         heroSubtext: formData.heroSubtext,
         heroImageUrl: formData.heroImageUrl,
+        heroImagePosition: formData.heroImagePosition,
       })
+      setSaved(formData)
+      router.refresh()
     })
   }
 
@@ -128,7 +131,7 @@ export function DetailsForm({ settings }: { settings: SiteSettings }) {
           <p className="text-zinc-500 text-sm mb-4">The main introduction seen at the top of the website.</p>
         </div>
 
-        <ImageUploader 
+        <ImageUploader
           label="Hero Image"
           value={formData.heroImageUrl}
           publicId=""
@@ -137,7 +140,15 @@ export function DetailsForm({ settings }: { settings: SiteSettings }) {
           onRemove={() => setFormData(prev => ({ ...prev, heroImageUrl: "" }))}
         />
 
-        <TextField 
+        {formData.heroImageUrl && (
+          <FocalPointPicker
+            imageUrl={formData.heroImageUrl}
+            value={formData.heroImagePosition}
+            onChange={(position) => setFormData(prev => ({ ...prev, heroImagePosition: position }))}
+          />
+        )}
+
+        <TextField
           label="Hero Headline" 
           name="heroHeadline" 
           value={formData.heroHeadline} 
