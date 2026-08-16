@@ -1,18 +1,23 @@
 import { MapPin, Phone, Mail, MessageSquare } from "lucide-react"
+import { FacebookIcon, InstagramIcon } from "./SocialIcons"
 
-export function Footer({ 
-  businessName, 
-  address, 
-  phone, 
-  email, 
+export function Footer({
+  businessName,
+  address,
+  phone,
+  email,
   whatsapp,
+  facebookUrl,
+  instagramUrl,
   hours
-}: { 
+}: {
   businessName?: string
   address?: string
   phone?: string
   email?: string
   whatsapp?: string
+  facebookUrl?: string
+  instagramUrl?: string
   hours: any[]
 }) {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -29,6 +34,20 @@ export function Footer({
             <p className="text-brand-peach/50 text-sm leading-relaxed max-w-xs">
               Providing expert guidance and clarity to help you navigate life's journey with confidence.
             </p>
+            {(facebookUrl || instagramUrl) && (
+              <div className="flex gap-3">
+                {facebookUrl && (
+                  <a href={facebookUrl} target="_blank" rel="noreferrer" aria-label="Facebook" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors text-white">
+                    <FacebookIcon size={18} />
+                  </a>
+                )}
+                {instagramUrl && (
+                  <a href={instagramUrl} target="_blank" rel="noreferrer" aria-label="Instagram" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors text-white">
+                    <InstagramIcon size={18} />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-6">

@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache"
 import {
   MapPin, Phone, Mail, Clock, ArrowRight, CheckCircle2,
   Users, Calendar, ShieldCheck, Heart, Award, Star,
-  MessageCircle, ChevronDown, Link, Globe,
+  MessageCircle, ChevronDown,
   GraduationCap, Quote, Sparkles
 } from "lucide-react"
 import { FadeIn } from "@/components/public/FadeIn"
@@ -11,6 +11,7 @@ import { LiteYouTube } from "@/components/public/LiteYouTube"
 import { GalleryGrid } from "@/components/public/GalleryGrid"
 import { BannerGrid } from "@/components/public/BannerGrid"
 import { CelestialBg } from "@/components/public/CelestialBg"
+import { FacebookIcon, InstagramIcon } from "@/components/public/SocialIcons"
 import { getDiscountLabel, type DiscountBadgeFormat } from "@/lib/pricing"
 import { formatDuration } from "@/lib/duration"
 import { reconcileSectionOrder, type SectionKey } from "@/lib/sections"
@@ -35,7 +36,7 @@ const getStats = unstable_cache(
 )
 
 const getCertifications = unstable_cache(
-  async () => prisma.certification.findMany({ orderBy: { order: 'asc' } }),
+  async () => prisma.certification.findMany({ where: { isActive: true }, orderBy: { order: 'asc' } }),
   ['certifications'],
   { tags: ['site-data'] }
 )
@@ -594,10 +595,20 @@ export default async function HomePage() {
                  <li><a href="#services" className="hover:text-white transition-colors">Consultations</a></li>
                  <li><a href={waLink} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">WhatsApp Booking</a></li>
                </ul>
-               <div className="mt-8 pt-8 border-t border-white/10 flex gap-4">
-                 <a href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors text-white"><Globe size={18} /></a>
-                 <a href="#" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors text-white"><Link size={18} /></a>
-               </div>
+               {(settings.facebookUrl || settings.instagramUrl) && (
+                 <div className="mt-8 pt-8 border-t border-white/10 flex gap-4">
+                   {settings.facebookUrl && (
+                     <a href={settings.facebookUrl} target="_blank" rel="noreferrer" aria-label="Facebook" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors text-white">
+                       <FacebookIcon size={18} />
+                     </a>
+                   )}
+                   {settings.instagramUrl && (
+                     <a href={settings.instagramUrl} target="_blank" rel="noreferrer" aria-label="Instagram" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors text-white">
+                       <InstagramIcon size={18} />
+                     </a>
+                   )}
+                 </div>
+               )}
             </div>
           </div>
 

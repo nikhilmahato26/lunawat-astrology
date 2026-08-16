@@ -29,12 +29,14 @@ export default async function PublicLayout({ children }: { children: ReactNode }
       <main className="pt-20">
         {children}
       </main>
-      <Footer 
+      <Footer
         businessName={settings?.businessName}
         address={settings?.address || undefined}
         phone={settings?.phone || undefined}
         email={settings?.email || undefined}
         whatsapp={settings?.whatsapp || undefined}
+        facebookUrl={settings?.facebookUrl || undefined}
+        instagramUrl={settings?.instagramUrl || undefined}
         hours={hours}
       />
     </div>

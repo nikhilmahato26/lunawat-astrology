@@ -13,6 +13,7 @@ type Certification = {
   issuer?: string
   year?: string
   imageUrl?: string
+  isActive: boolean
 }
 
 export function CertificationsForm({
@@ -28,6 +29,7 @@ export function CertificationsForm({
     issuer: c.issuer || "",
     year: c.year || "",
     imageUrl: c.imageUrl || "",
+    isActive: c.isActive ?? true,
   }))
   const [certs, setCerts] = useState<Certification[]>(initialItems)
   const [showSection, setShowSection] = useState(initialShowSection)
@@ -71,11 +73,11 @@ export function CertificationsForm({
           items={certs}
           onChange={setCerts}
           addButtonText="Add Certification"
-          newItemFactory={() => ({ title: "", issuer: "", year: "", imageUrl: "" })}
+          newItemFactory={() => ({ title: "", issuer: "", year: "", imageUrl: "", isActive: true })}
           renderItem={(cert, index, update) => (
             <div className="flex flex-col md:flex-row gap-6 pt-1">
               <div className="w-32 shrink-0">
-                <ImageUploader 
+                <ImageUploader
                   value={cert.imageUrl}
                   folder="lunawat/certifications"
                   aspectRatio="square"
@@ -83,24 +85,32 @@ export function CertificationsForm({
                   onRemove={() => update(index, { ...cert, imageUrl: "" })}
                 />
               </div>
-              <div className="flex-1 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <TextField
-                  label="Title / Name"
-                  value={cert.title}
-                  onChange={(e) => update(index, { ...cert, title: e.target.value })}
-                  placeholder="e.g. Jyotish Acharya"
-                />
-                <TextField
-                  label="Issuer (Optional)"
-                  value={cert.issuer}
-                  onChange={(e) => update(index, { ...cert, issuer: e.target.value })}
-                  placeholder="e.g. AIFAS"
-                />
-                <TextField
-                  label="Year (Optional)"
-                  value={cert.year}
-                  onChange={(e) => update(index, { ...cert, year: e.target.value })}
-                  placeholder="e.g. 2010"
+              <div className="flex-1 space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <TextField
+                    label="Title / Name"
+                    value={cert.title}
+                    onChange={(e) => update(index, { ...cert, title: e.target.value })}
+                    placeholder="e.g. Jyotish Acharya"
+                  />
+                  <TextField
+                    label="Issuer (Optional)"
+                    value={cert.issuer}
+                    onChange={(e) => update(index, { ...cert, issuer: e.target.value })}
+                    placeholder="e.g. AIFAS"
+                  />
+                  <TextField
+                    label="Year (Optional)"
+                    value={cert.year}
+                    onChange={(e) => update(index, { ...cert, year: e.target.value })}
+                    placeholder="e.g. 2010"
+                  />
+                </div>
+                <ToggleSwitch
+                  label="Active"
+                  hint="Turn off to hide just this certification, without removing it."
+                  checked={cert.isActive}
+                  onChange={(checked) => update(index, { ...cert, isActive: checked })}
                 />
               </div>
             </div>

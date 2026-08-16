@@ -14,6 +14,8 @@ export function ContactForm({ settings, initialHours }: { settings: SiteSettings
     upiNumber: settings.upiNumber || "",
     address: settings.address || "",
     mapEmbedUrl: settings.mapEmbedUrl || "",
+    facebookUrl: settings.facebookUrl || "",
+    instagramUrl: settings.instagramUrl || "",
   }
   const [formData, setFormData] = useState(initialFormData)
 
@@ -111,6 +113,23 @@ export function ContactForm({ settings, initialHours }: { settings: SiteSettings
           onChange={handleChange}
           hint='On Google Maps: Share → Embed a map → copy only the URL inside src="..." and paste it here'
         />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <TextField
+            label="Facebook URL (Optional)"
+            name="facebookUrl"
+            value={formData.facebookUrl}
+            onChange={handleChange}
+            placeholder="https://facebook.com/yourpage"
+          />
+          <TextField
+            label="Instagram URL (Optional)"
+            name="instagramUrl"
+            value={formData.instagramUrl}
+            onChange={handleChange}
+            placeholder="https://instagram.com/yourhandle"
+          />
+        </div>
       </section>
 
       <section className="space-y-6 border-t border-zinc-200 pt-8">

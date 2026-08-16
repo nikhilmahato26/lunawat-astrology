@@ -94,6 +94,8 @@ export async function updateContactData(data: {
   upiNumber: string,
   address: string,
   mapEmbedUrl: string,
+  facebookUrl: string,
+  instagramUrl: string,
   hours: any[]
 }) {
   const session = await auth()
@@ -111,6 +113,8 @@ export async function updateContactData(data: {
         upiNumber: data.upiNumber,
         address: data.address,
         mapEmbedUrl: data.mapEmbedUrl,
+        facebookUrl: data.facebookUrl,
+        instagramUrl: data.instagramUrl,
       }
     })
     
@@ -198,12 +202,12 @@ export async function updateBanners(banners: {
   return { success: true }
 }
 
-export async function updateCertifications(certifications: { title: string, issuer?: string, year?: string, imageUrl?: string }[]) {
+export async function updateCertifications(certifications: { title: string, issuer?: string, year?: string, imageUrl?: string, isActive?: boolean }[]) {
   const session = await auth()
   if (!session?.user) throw new Error("Unauthorized")
 
   await prisma.certification.deleteMany()
-  
+
   if (certifications.length > 0) {
     await prisma.certification.createMany({
       data: certifications.map((cert, i) => ({
@@ -211,6 +215,7 @@ export async function updateCertifications(certifications: { title: string, issu
         issuer: cert.issuer,
         year: cert.year,
         imageUrl: cert.imageUrl,
+        isActive: cert.isActive ?? true,
         order: i,
       }))
     })

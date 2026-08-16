@@ -128,6 +128,7 @@ model Certification {
   year     String?
   imageUrl String?
   order    Int     @default(0)
+  isActive Boolean @default(true)
 }
 
 model Testimonial {
