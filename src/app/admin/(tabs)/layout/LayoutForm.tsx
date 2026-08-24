@@ -14,7 +14,8 @@ export const SECTION_META: Record<string, string> = {
   certifications: "Certifications",
   banners: "Banners",
   testimonials: "Testimonials",
-  media: "Gallery & Videos",
+  gallery: "Gallery",
+  videos: "Videos",
   faq: "FAQ",
   cta: "Call-to-Action Band",
 }
@@ -54,7 +55,8 @@ export function LayoutForm({
         showCertifications: visibility.certifications,
         showBanners: visibility.banners,
         showTestimonials: visibility.testimonials,
-        showMedia: visibility.media,
+        showGallery: visibility.gallery,
+        showVideos: visibility.videos,
         showFaq: visibility.faq,
         showCta: visibility.cta,
       })

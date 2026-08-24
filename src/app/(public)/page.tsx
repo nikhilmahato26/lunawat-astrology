@@ -89,7 +89,8 @@ export default async function HomePage() {
     certifications: settings.showCertifications,
     banners: settings.showBanners,
     testimonials: settings.showTestimonials,
-    media: settings.showMedia,
+    gallery: settings.showGallery,
+    videos: settings.showVideos,
     faq: settings.showFaq,
     cta: settings.showCta,
   }
@@ -377,37 +378,35 @@ export default async function HomePage() {
     </section>
   )
 
-  const mediaSection: ReactNode = (gallery.length === 0 && videos.length === 0) ? null : (
+  const gallerySection: ReactNode = gallery.length === 0 ? null : (
     <section className="py-24 bg-brand-peach">
       <div className="max-w-6xl mx-auto px-4 lg:px-8">
         <FadeIn className="text-center mb-16">
-          <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Media</h3>
-          <h2 className="font-serif text-4xl font-bold text-brand-brown">Gallery & Videos</h2>
+          <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Photos</h3>
+          <h2 className="font-serif text-4xl font-bold text-brand-brown">Gallery</h2>
           <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
         </FadeIn>
+        <GalleryGrid gallery={gallery} />
+      </div>
+    </section>
+  )
 
-        <div className="space-y-20">
-          {videos.length > 0 && (
-            <div>
-              <h3 className="font-serif text-2xl font-bold text-brand-brown mb-8 text-center md:text-left">Videos</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {videos.map((vid: (typeof videos)[number], i: number) => (
-                  <FadeIn key={vid.id} delay={i * 0.1}>
-                    <div className="rounded-3xl overflow-hidden shadow-xl shadow-brand-brown/5">
-                      <LiteYouTube videoId={vid.videoId} title={vid.title || "YouTube Video"} />
-                    </div>
-                  </FadeIn>
-                ))}
+  const videosSection: ReactNode = videos.length === 0 ? null : (
+    <section className="py-24 bg-white">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8">
+        <FadeIn className="text-center mb-16">
+          <h3 className="text-brand-orange font-bold text-sm tracking-widest uppercase mb-4">Media</h3>
+          <h2 className="font-serif text-4xl font-bold text-brand-brown">Videos</h2>
+          <div className="w-16 h-1 bg-brand-orange mx-auto mt-6 rounded-full" />
+        </FadeIn>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {videos.map((vid: (typeof videos)[number], i: number) => (
+            <FadeIn key={vid.id} delay={i * 0.1}>
+              <div className="rounded-3xl overflow-hidden shadow-xl shadow-brand-brown/5">
+                <LiteYouTube videoId={vid.videoId} title={vid.title || "YouTube Video"} />
               </div>
-            </div>
-          )}
-
-          {gallery.length > 0 && (
-            <div>
-              <h3 className="font-serif text-2xl font-bold text-brand-brown mb-8 text-center md:text-left">Gallery</h3>
-              <GalleryGrid gallery={gallery} />
-            </div>
-          )}
+            </FadeIn>
+          ))}
         </div>
       </div>
     </section>
@@ -477,7 +476,8 @@ export default async function HomePage() {
     certifications: certificationsSection,
     banners: bannersSection,
     testimonials: testimonialsSection,
-    media: mediaSection,
+    gallery: gallerySection,
+    videos: videosSection,
     faq: faqSection,
     cta: ctaSection,
   }

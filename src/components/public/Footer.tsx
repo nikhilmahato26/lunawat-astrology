@@ -85,7 +85,10 @@ export function Footer({
             <ul className="space-y-2 text-sm text-brand-peach/70">
               {hours.map((h) => (
                 <li key={h.day} className="flex justify-between items-center border-b border-white/10 pb-2 last:border-0">
-                  <span className="text-brand-peach/50">{days[h.day]}</span>
+                  <span className="text-brand-peach/50">
+                    {days[h.day]}
+                    {h.isDateEnabled && h.dateText && <span className="block text-xs mt-0.5">{h.dateText}</span>}
+                  </span>
                   <span>{h.isClosed ? "Closed" : `${h.openTime} - ${h.closeTime}`}</span>
                 </li>
               ))}

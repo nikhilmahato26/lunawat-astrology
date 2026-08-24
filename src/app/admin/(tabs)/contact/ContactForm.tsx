@@ -150,18 +150,40 @@ export function ContactForm({ settings, initialHours }: { settings: SiteSettings
                 />
               </div>
               {!hour.isClosed && (
-                <div className="flex-1 flex items-center gap-4">
-                  <TimeField 
-                    label="" 
-                    value={hour.openTime} 
-                    onChange={(e) => updateHour(index, { ...hour, openTime: e.target.value })} 
-                  />
-                  <span className="text-zinc-500">to</span>
-                  <TimeField 
-                    label="" 
-                    value={hour.closeTime} 
-                    onChange={(e) => updateHour(index, { ...hour, closeTime: e.target.value })} 
-                  />
+                <div className="flex-1 flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                    <TimeField 
+                      label="" 
+                      value={hour.openTime} 
+                      onChange={(e) => updateHour(index, { ...hour, openTime: e.target.value })} 
+                    />
+                    <span className="text-zinc-500">to</span>
+                    <TimeField 
+                      label="" 
+                      value={hour.closeTime} 
+                      onChange={(e) => updateHour(index, { ...hour, closeTime: e.target.value })} 
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-24 shrink-0">
+                      <ToggleSwitch 
+                        label="Specific Date" 
+                        checked={hour.isDateEnabled} 
+                        onChange={(checked) => updateHour(index, { ...hour, isDateEnabled: checked })} 
+                      />
+                    </div>
+                    {hour.isDateEnabled && (
+                      <div className="flex-1">
+                        <TextField 
+                          label="" 
+                          name={`dateText-${hour.day}`}
+                          value={hour.dateText || ""} 
+                          onChange={(e) => updateHour(index, { ...hour, dateText: e.target.value })} 
+                          placeholder="e.g. 24 Aug 2026"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

@@ -10,7 +10,8 @@ export const SECTION_KEYS = [
   "certifications",
   "banners",
   "testimonials",
-  "media",
+  "gallery",
+  "videos",
   "faq",
   "cta",
 ] as const

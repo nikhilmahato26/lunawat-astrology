@@ -68,8 +68,8 @@ model SiteSettings {
   showMedia         Boolean @default(true)
 
   // Order of the reorderable middle sections (between the fixed Hero and Contact/Footer).
-  // Keys: stats | whyChoose | about | services | certifications | banners | testimonials | media | faq | cta
-  sectionOrder String[] @default(["stats", "whyChoose", "about", "services", "certifications", "banners", "testimonials", "media", "faq", "cta"])
+  // Keys: stats | whyChoose | about | services | certifications | banners | testimonials | gallery | videos | faq | cta
+  sectionOrder String[] @default(["stats", "whyChoose", "about", "services", "certifications", "banners", "testimonials", "gallery", "videos", "faq", "cta"])
 
   // How the auto-computed discount badge on pricing cards displays, derived from each
   // Service's price vs originalPrice — "FLAT" shows "₹X OFF", "PERCENT" shows "X% OFF".
@@ -189,6 +189,8 @@ model BusinessHour {
   openTime String  @default("10:00")
   closeTime String @default("19:00")
   isClosed Boolean @default(false)
+  dateText String?
+  isDateEnabled Boolean @default(false)
 }
 
 model Lead {
