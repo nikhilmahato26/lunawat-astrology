@@ -24,7 +24,7 @@ const getSettings = unstable_cache(
 )
 
 const getServices = unstable_cache(
-  async () => prisma.service.findMany({ orderBy: { order: 'asc' } }),
+  async () => prisma.service.findMany({ where: { isActive: true }, orderBy: { order: 'asc' } }),
   ['services'],
   { tags: ['site-data'] }
 )
