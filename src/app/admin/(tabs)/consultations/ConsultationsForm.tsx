@@ -13,12 +13,14 @@ import type { Service } from "@prisma/client"
 export const MODE_OPTIONS = ["Normal", "VIP", "In-Person", "Phone Call", "Video Call", "Custom"] as const
 
 const BOOKING_FIELD_OPTIONS: { key: string; label: string }[] = [
-  { key: "email",    label: "Email" },
-  { key: "category", label: "Category (what is this about)" },
-  { key: "dob",     label: "Date of Birth" },
-  { key: "tob",     label: "Time of Birth" },
-  { key: "pob",     label: "Place of Birth" },
-  { key: "message", label: "Your Concern (message)" },
+  { key: "email",     label: "Email" },
+  { key: "category",  label: "Category (what is this about)" },
+  { key: "dob",       label: "Date of Birth" },
+  { key: "tob",       label: "Time of Birth" },
+  { key: "pob",       label: "Place of Birth" },
+  { key: "education", label: "Education / Qualification" },
+  { key: "address",   label: "Address / City" },
+  { key: "message",   label: "Your Concern (message)" },
 ]
 
 const selectClass =

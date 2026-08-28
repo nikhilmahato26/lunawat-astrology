@@ -20,7 +20,18 @@ const bookingSchema = z.object({
   dob: z.string().trim().optional(),
   tob: z.string().trim().optional(),
   pob: z.string().trim().optional(),
+  education: z.string().trim().optional(),
+  address: z.string().trim().optional(),
   message: z.string().trim().optional(),
+
+  // Matchmaking / Couple details
+  isMatchmaking: z.boolean().optional(),
+  partnerName: z.string().trim().optional(),
+  partnerDob: z.string().trim().optional(),
+  partnerTob: z.string().trim().optional(),
+  partnerPob: z.string().trim().optional(),
+  partnerEducation: z.string().trim().optional(),
+  partnerAddress: z.string().trim().optional(),
 })
 
 type BookingResult =
@@ -71,22 +82,43 @@ export async function createBooking(input: unknown): Promise<BookingResult> {
       dob: data.dob || null,
       tob: data.tob || null,
       pob: data.pob || null,
+      education: data.education || null,
+      address: data.address || null,
+      isMatchmaking: data.isMatchmaking || false,
+      partnerName: data.partnerName || null,
+      partnerDob: data.partnerDob || null,
+      partnerTob: data.partnerTob || null,
+      partnerPob: data.partnerPob || null,
+      partnerEducation: data.partnerEducation || null,
+      partnerAddress: data.partnerAddress || null,
       amount: service.price,
       paymentStatus: usePayment ? "PENDING" : null,
     },
   })
 
   if (!usePayment) {
+    const isCouple = data.isMatchmaking || Boolean(data.partnerName)
     const waMessage = [
       `Hi, I'd like to book *${service.title}* (₹${service.price}).`,
+      `*Client Details:*`,
       `Name: ${data.name}`,
       `WhatsApp: ${data.whatsapp}`,
+      data.phone !== data.whatsapp ? `Phone: ${data.phone}` : null,
       data.email ? `Email: ${data.email}` : null,
       data.category ? `Category: ${data.category}` : null,
       data.dob ? `DOB: ${data.dob}` : null,
       data.tob ? `TOB: ${data.tob}` : null,
       data.pob ? `POB: ${data.pob}` : null,
-      data.message ? `Message: ${data.message}` : null,
+      data.education ? `Education: ${data.education}` : null,
+      data.address ? `Address: ${data.address}` : null,
+      isCouple ? `\n*Partner / Matchmaking Details:*` : null,
+      isCouple && data.partnerName ? `Partner Name: ${data.partnerName}` : null,
+      isCouple && data.partnerDob ? `Partner DOB: ${data.partnerDob}` : null,
+      isCouple && data.partnerTob ? `Partner TOB: ${data.partnerTob}` : null,
+      isCouple && data.partnerPob ? `Partner POB: ${data.partnerPob}` : null,
+      isCouple && data.partnerEducation ? `Partner Education: ${data.partnerEducation}` : null,
+      isCouple && data.partnerAddress ? `Partner Address: ${data.partnerAddress}` : null,
+      data.message ? `\nConcern: ${data.message}` : null,
     ]
       .filter(Boolean)
       .join("\n")

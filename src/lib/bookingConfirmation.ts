@@ -56,6 +56,19 @@ export async function confirmPaidBooking(leadId: string, paymentId: string): Pro
       ...(updated.dob ? ([["Date of Birth", updated.dob]] as [string, string][]) : []),
       ...(updated.tob ? ([["Time of Birth", updated.tob]] as [string, string][]) : []),
       ...(updated.pob ? ([["Place of Birth", updated.pob]] as [string, string][]) : []),
+      ...(updated.education ? ([["Education", updated.education]] as [string, string][]) : []),
+      ...(updated.address ? ([["Address", updated.address]] as [string, string][]) : []),
+      ...(updated.isMatchmaking || updated.partnerName
+        ? ([
+            ["-- Partner Details --", ""],
+            ...(updated.partnerName ? ([["Partner Name", updated.partnerName]] as [string, string][]) : []),
+            ...(updated.partnerDob ? ([["Partner DOB", updated.partnerDob]] as [string, string][]) : []),
+            ...(updated.partnerTob ? ([["Partner TOB", updated.partnerTob]] as [string, string][]) : []),
+            ...(updated.partnerPob ? ([["Partner POB", updated.partnerPob]] as [string, string][]) : []),
+            ...(updated.partnerEducation ? ([["Partner Education", updated.partnerEducation]] as [string, string][]) : []),
+            ...(updated.partnerAddress ? ([["Partner Address", updated.partnerAddress]] as [string, string][]) : []),
+          ] as [string, string][])
+        : []),
       ...(updated.message ? ([["Message", updated.message]] as [string, string][]) : []),
     ]
 
